@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainer.schema.json",
+  "name": "Vite React Dev Container",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:22",
+  "forwardPorts": [5173],
+  "portsAttributes": {
+    "5173": { "label": "Vite", "onAutoForward": "openBrowser" }
+  },
+  "postCreateCommand": "npm install && npm install react react-dom d3 && npm install -D @vitejs/plugin-react && npm install -D vite typescript @types/react @types/react-dom",
+  "mounts": [
+    "source=afreximbank-impact-dashboard-vite-cache,target=/workspaces/afreximbank-impact-dashboard/node_modules/.vite,type=volume"
+  ],
+  "remoteUser": "root",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash"
+      },
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "eamodio.gitlens"
+      ]
+    }
+  },
+  "containerEnv": {
+    "DEVCONTAINER": "true"
+  }
+}

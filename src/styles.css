@@ -1,0 +1,34 @@
+:root{
+  --bg:#0a0d12;
+  --panel:#121722;
+  --ink:#eef2f7;
+  --muted:#9aa6b2;
+  --accent:#66c2a5; /* money */
+  --accent-2:#8da0cb; /* projects */
+  --accent-3:#fc8d62; /* trade */
+  --accent-4:#e78ac3; /* jobs/people */
+  --ring:#2a3a52;
+}
+*{box-sizing:border-box}
+html,body,#root{height:100%}
+body{margin:0;font:14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";}
+body{background:var(--bg);color:var(--ink)}
+a{color:inherit}
+.container{max-width:1200px;margin:0 auto;padding:24px}
+.panel{background:var(--panel);border:1px solid var(--ring);border-radius:12px;padding:16px}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.hstack{display:flex;gap:8px;align-items:center}
+.title{font-size:18px;margin:0 0 8px}
+.subtitle{color:var(--muted);margin:0 0 8px}
+.badge{padding:2px 8px;border-radius:999px;background:#1d2433;border:1px solid var(--ring);color:var(--ink)}
+.tabbar{display:flex;gap:8px;margin:16px 0}
+.tab{padding:8px 12px;border-radius:8px;border:1px solid var(--ring);background:#121722;cursor:pointer}
+.tab[aria-selected="true"]{outline:2px solid var(--ring);background:#0f1420}
+.grid{display:grid;gap:12px}
+.grid.cols-2{grid-template-columns:repeat(2,1fr)}
+.grid.cols-3{grid-template-columns:repeat(3,1fr)}
+.grid.cols-4{grid-template-columns:repeat(4,1fr)}
+.metric-card{flex:1 1 260px;min-width:260px}
+.caption{color:var(--muted);font-size:12px}
+hr.sep{border:0;border-top:1px solid var(--ring);margin:16px 0}
+select,button{background:#0f1420;color:var(--ink);border:1px solid var(--ring);border-radius:8px;padding:6px 8px}
