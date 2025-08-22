@@ -47,6 +47,7 @@ a{color:inherit;text-decoration:none}
   border-radius:12px;
   padding:16px;
   box-shadow:var(--shadow-elev);
+  overflow: hidden;
 }
 .panel.soft{background:var(--panel-soft)}
 
@@ -108,18 +109,44 @@ button.warn{
 
 /* ---- Chart helpers ---- */
 .bar-frame{
-  width:200px;height:12px;border-radius:6px;
-  background:var(--panel-soft);
-  border:1px solid var(--ring);
+  position: relative;
+  width: 100%;                 /* stretch to the grid column */
+  height: 12px;
+  background: var(--panel-soft);
+  border: 1px solid var(--ring);
+  border-radius: 999px;        /* pill shape */
+  overflow: hidden;            /* clip the fill to rounded corners */
 }
-.bar-fill{height:12px;background:var(--accent)}
+.bar-fill{
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: var(--w, 0%);         /* set via inline CSS variable */
+  background: var(--accent);
+  border-radius: inherit;      /* rounded right end at 100% */
+  transform: translateZ(0);    /* avoid subpixel gaps in some browsers */
+}
 .unit-dot{width:8px;height:8px;border-radius:2px;background:var(--accent-2)}
 .jobs-emph{color:var(--accent-4)}
 
 /* ---- Africa tile map ---- */
-svg .tile{
-  fill:var(--panel-soft);
-  stroke:var(--ring);
+svg .tile { fill: var(--panel-soft); stroke: var(--ring); }
+svg .label { fill: var(--ink); }
+svg .muted { fill: var(--muted); }
+
+
+.region-grid{
+  display:grid;
+  gap:12px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  align-items:start;
 }
-svg .label{fill:var(--ink)}
-svg .muted{fill:var(--muted)}
+.region-card{ display:flex; flex-direction:column; gap:10px; }
+.region-title{ margin:0; font-size:16px; color:var(--teal-700); }
+.region-row{
+  display:grid;
+  grid-template-columns: minmax(120px, 160px) 1fr; /* label | bar */
+  align-items:center;
+  gap:8px;
+}
+.region-label{ color:var(--muted); font-size:12px; }
+.region-footer{ display:flex; justify-content:space-between; align-items:center; margin-top:4px; }

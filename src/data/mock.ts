@@ -3,7 +3,7 @@ import { HeadlineMetricDatum, SectorImpact, RegionImpact, SdgStat } from "../typ
 export const YEAR = 2025;
 
 export const headline: HeadlineMetricDatum[] = [
-  { key: "totalAmountDisbursed", label: "Total Amount Disbursed (US$)", unit: "US$", current: 1_240_000_000, previous: 1_100_000_000, family: "money" },
+  { key: "totalAmountDisbursed", label: "Total Amount Disbursed (US$)", unit: "US$", current: 1_240_000_000, previous: 1_400_000_000, family: "money" },
   { key: "investmentAttracted", label: "Investment attracted from within and outside Africa (US$)", unit: "US$", current: 2_300_000_000, previous: 2_000_000_000, family: "money" },
   { key: "projectsFundedTotal", label: "Total number of Projects Funded", unit: "count", current: 120, previous: 105, family: "projects" },
   { key: "projectsFundedNew", label: "New Projects Funded", unit: "count", current: 55, previous: 49, family: "projects" },

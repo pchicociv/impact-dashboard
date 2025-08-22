@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import "./styles.css";
 import SlopeCardRow from "./components/SlopeCardRow";
 import SectorSmallMultiples from "./components/SectorSmallMultiples";
-import AfricaTileMap from "./components/AfricaTileMap";
+import RegionCardsGrid from "./components/RegionCardsGrid";
 import SdgWaffleGrid from "./components/SdgWaffleGrid";
 import { Tabs } from "./components/Tabs";
 import { headline as headlineAll, sectors, regions, sdgs, YEAR } from "./data/mock";
@@ -38,9 +38,6 @@ export default function App() {
       </div>
 
       <SlopeCardRow data={headline} />
-      <p className="caption">
-        Metric labels & units mirror your template (e.g., “Total Amount Disbursed (US$)”, “Manufactured Exports Facilitated (US$)”, “Jobs Created/Sustained”).
-      </p>
 
       <hr className="sep" />
 
@@ -62,7 +59,7 @@ export default function App() {
             content: (
               <>
                 <p className="caption">Intra-African Trade, Manufactured Exports, SMEs, Jobs, Disbursement.</p>
-                <AfricaTileMap regions={regions} />
+                <RegionCardsGrid regions={regions} />
               </>
             )
           },
