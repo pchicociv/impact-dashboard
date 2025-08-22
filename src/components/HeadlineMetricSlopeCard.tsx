@@ -1,22 +1,42 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { scaleLinear } from "d3-scale";
 import { max, min } from "d3-array";
 import { formatCurrencyCompact, formatNumberCompact, familyAccent } from "../utils/format";
 import type { HeadlineMetricDatum } from "../types";
 import { PillBadge } from "./PillBadge";
 
+/* simple resize observer */
+function useWidth<T extends HTMLElement>(initial = 260) {
+  const ref = useRef<T | null>(null);
+  const [w, setW] = useState(initial);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      const { width } = entries[0].contentRect;
+      setW(Math.max(220, width)); // clamp to a sane minimum
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return { ref, width: w };
+}
+
 /**
- * Slope card:
- * - PREVIOUS is always on the LEFT (xL)
- * - CURRENT is always on the RIGHT (xR)
+ * Slope card (responsive):
+ * - PREVIOUS is always on the LEFT
+ * - CURRENT is always on the RIGHT
  * - Y encodes the value => diagonal slope up/down
  */
-const W = 260, H = 110;
-const P = 12;          // inner padding
-const xL = P + 6;      // left dot x
-const xR = W - P - 6;  // right dot x
+const H = 110;
+const P = 16; // inner padding for SVG
 
 export default function HeadlineMetricSlopeCard({ d }: { d: HeadlineMetricDatum }) {
+  const { ref, width } = useWidth<HTMLDivElement>();
+  const W = width;                // measured card content width
+  const xL = P + 6;               // left dot x
+  const xR = W - P - 6;           // right dot x
+
   const lo = min([d.current, d.previous]) ?? 0;
   const hi = max([d.current, d.previous]) ?? 1;
   const pad = Math.max(hi - lo, hi) * 0.12; // breathing room
@@ -37,20 +57,29 @@ export default function HeadlineMetricSlopeCard({ d }: { d: HeadlineMetricDatum 
   const currLabelDy = yCurr > H - 30 ? -10 : 16;
 
   return (
-    <div className="panel metric-card" aria-label={d.label}>
-      <div className="hstack" style={{ justifyContent: "space-between", marginBottom: 6 }}>
-        <strong>{d.label}</strong>
-        <PillBadge>{delta >= 0 ? "▲" : "▼"} {Math.abs(delta).toFixed(1)}%</PillBadge>
+    <div className="panel metric-card" aria-label={d.label} ref={ref}>
+      <div className="card-head">
+        <strong className="card-title" title={d.label}>{d.label}</strong>
+        <PillBadge title={`Δ ${Math.abs(delta).toFixed(1)}%`}>
+          {delta >= 0 ? "▲" : "▼"}&nbsp;{Math.abs(delta).toFixed(1)}%
+        </PillBadge>
       </div>
 
-      <svg width={W} height={H} role="img" aria-label={`${d.label}: previous vs current`}>
-        {/* faint vertical guides so the left gutter doesn't feel empty */}
-        <line x1={xL} y1={10} x2={xL} y2={H - 10} stroke="var(--ring)" strokeDasharray="2,4" />
-        <line x1={xR} y1={10} x2={xR} y2={H - 10} stroke="var(--ring)" strokeDasharray="2,4" />
+      {/* responsive SVG: fills the card width */}
+      <svg
+        className="slope-svg"
+        viewBox={`0 0 ${W} ${H}`}
+        width="100%"
+        height={H}
+        role="img"
+        aria-label={`${d.label}: previous vs current`}
+      >
+        {/* subtle left/right guides */}
+        <line x1={xL} y1={10} x2={xL} y2={H - 10} stroke="var(--teal-600)" strokeDasharray="2,4" />
+        <line x1={xR} y1={10} x2={xR} y2={H - 10} stroke="var(--teal-600)" strokeDasharray="2,4" />
 
         {/* connector with slope */}
-        <line x1={xL} y1={yPrev} x2={xR} y2={yCurr}
-              stroke={accent} strokeWidth={3} strokeLinecap="round" />
+        <line x1={xL} y1={yPrev} x2={xR} y2={yCurr} stroke={accent} strokeWidth={3} strokeLinecap="round" />
 
         {/* previous (left) */}
         <circle cx={xL} cy={yPrev} r={5} fill="var(--panel)" stroke="var(--muted)" strokeWidth={2} />

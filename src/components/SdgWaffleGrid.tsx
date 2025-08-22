@@ -17,7 +17,7 @@ export default function SdgWaffleGrid({ stats }: { stats: SdgStat[] }) {
                 const x = (i % cols) * (cell + gap);
                 const y = Math.floor(i / cols) * (cell + gap);
                 const on = i < filled;
-                return <rect key={i} x={x} y={y} width={cell} height={cell} fill={on ? "var(--gold-500)" : "var(--teal-700)"} stroke="var(--ring)" />;
+                return <rect key={i} x={x} y={y} width={cell} height={cell} fill={on ? "var(--gold-500)" : "var(--teal-700)"} stroke="none" />;
               })}
             </svg>
             {s.exampleProject && <div className="caption" style={{ marginTop: 6 }}>e.g., {s.exampleProject}</div>}

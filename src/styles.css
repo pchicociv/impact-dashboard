@@ -21,11 +21,16 @@
   --ring:#CFE0DC;       /* borders / outlines */
   --shadow-elev: 0 1px 2px rgba(6,44,40,.06), 0 10px 24px rgba(6,44,40,.06);
 
-  /* Metric families → chart accents */
-  --accent:var(--green-500); /* money */
-  --accent-2:var(--teal-600);/* projects */
-  --accent-3:var(--gold-500);/* trade */
-  --accent-4:var(--teal-700);/* jobs/people */
+  /* Afreximbank-leaning families (balanced contrast) */
+  --accent:   #33B990; /* Money – brand green */
+  --accent-2: #2A8C82; /* Projects – teal */
+  --accent-3: #F3C613; /* Trade – gold */
+  --accent-4: #0E5F5A; /* Jobs – deep teal */
+
+  /* Delta gradient (keeps your example’s purple for “down”, brand for “up”) */
+  --delta-neg: #6A00A8;   /* purple */
+  --delta-zero: var(--panel-soft);
+  --delta-pos: var(--accent);
 }
 
 /* ---- Base ---- */
@@ -134,19 +139,114 @@ svg .label { fill: var(--ink); }
 svg .muted { fill: var(--muted); }
 
 
+/* Wider cards so bars have room */
 .region-grid{
   display:grid;
   gap:12px;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); /* was 260px */
   align-items:start;
 }
-.region-card{ display:flex; flex-direction:column; gap:10px; }
-.region-title{ margin:0; font-size:16px; color:var(--teal-700); }
-.region-row{
-  display:grid;
-  grid-template-columns: minmax(120px, 160px) 1fr; /* label | bar */
-  align-items:center;
-  gap:8px;
-}
+
+.region-card{ display:flex; flex-direction:column; gap:12px; padding:16px 18px; }
+.region-title{ margin:0; font-size:18px; color:var(--teal-700); }
+
+
 .region-label{ color:var(--muted); font-size:12px; }
-.region-footer{ display:flex; justify-content:space-between; align-items:center; margin-top:4px; }
+.region-row3{
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr) 84px; /* ← fixed label & value */
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 6px;
+}
+
+.region-label{
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* fixed width so the bar column is identical across cards */
+.region-value{
+  width: 84px;                 /* keep this fixed */
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  font-size: 13px;
+}
+.region-footer{ display:flex; justify-content:space-between; align-items:center; margin-top:2px; }
+
+/* Bars (responsive, rounded, non-clipping) */
+.bar-frame{
+  position: relative;
+  width: 100%;
+  height: 12px;
+  background: var(--panel-soft);
+  border: 1px solid var(--ring);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.bar-fill{
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--w, 0%);
+  background: var(--accent);
+  border-radius: inherit;
+}
+/* Legend */
+.legend{display:flex;align-items:center;gap:12px;margin:8px 0 4px}
+.legend-col{display:flex;align-items:center;gap:6px}
+.legend-bar{
+  position:relative;width:200px;height:12px;border-radius:999px;overflow:hidden;
+  background:linear-gradient(90deg,var(--delta-neg),var(--delta-zero),var(--delta-pos));
+  border:1px solid var(--ring);
+}
+.legend-ticks{display:flex;justify-content:space-between;margin-top:2px;color:var(--muted);font-size:11px}
+
+/* Tiny colour chips for families */
+.legend-chip{display:inline-flex;align-items:center;gap:6px;margin-left:8px}
+.legend-dot{width:10px;height:10px;border-radius:999px;display:inline-block}
+.legend-dot.money{background:var(--accent)}
+.legend-dot.projects{background:var(--accent-2)}
+.legend-dot.trade{background:var(--accent-3)}
+.legend-dot.jobs{background:var(--accent-4)}
+
+/* .legend-dot{
+  border: 1px solid rgba(0,0,0,.18);
+  box-shadow: 0 0 0 2px rgba(255,255,255,.75) inset; /* subtle inner ring */
+} */
+
+/* Metric card header: title wraps, badge stays top-right */
+.card-head{
+  display:grid;
+  grid-template-columns: 1fr auto; /* title grows, badge keeps width */
+  align-items:start;
+  gap:8px;
+  margin-bottom:6px;
+}
+
+/* allow multi-line title */
+.card-title{
+  white-space: normal;        /* ← allow wrapping */
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.2;
+  hyphens: auto;              /* nicer breaks for long words */
+  word-break: break-word;     /* safety for very long tokens */
+}
+
+/* keep the badge on one line and anchored to the top */
+.card-head .badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  white-space: nowrap;        /* ▲ 20.0% stays as one line */
+  line-height:1;
+  flex-shrink:0;
+  align-self:start;           /* pin to top-right */
+}
+
+/* Optional: on very narrow screens, put badge below title */
+@media (max-width: 420px){
+  .card-head{ grid-template-columns: 1fr; row-gap:6px; }
+  .card-head .badge{ justify-self:start; }
+}

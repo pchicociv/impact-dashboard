@@ -17,12 +17,12 @@ export default function SectorSmallMultiples({
       {sectors.map((s) => {
         const jobsPerM =
           s.totalDisbursementM === 0 ? 0 : s.jobsCreated / s.totalDisbursementM;
-        const projectsDots = Math.min(s.numberOfProjects, 40); // cap for display
+        const projectsDots = Math.min(s.numberOfProjects, 100); // cap for display
         return (
           <div className="panel" key={s.sector}>
             <div className="hstack" style={{ justifyContent: "space-between" }}>
               <strong>{s.sector}</strong>
-              <span className="caption">{s.numberOfProjects} projects</span>
+              
             </div>
 
             <div style={{ marginTop: 8 }}>
@@ -37,7 +37,7 @@ export default function SectorSmallMultiples({
             </div>
 
             <div style={{ marginTop: 8 }}>
-              <div className="caption">Projects (unit strip)</div>
+              <div className="caption">Projects</div>
               <div className="hstack" style={{ flexWrap: "wrap", gap: 4 }}>
                 {Array.from({ length: projectsDots }).map((_, i) => (
                   <div
@@ -51,6 +51,7 @@ export default function SectorSmallMultiples({
                   />
                 ))}
               </div>
+              <span className="caption">{s.numberOfProjects}</span>
             </div>
 
             <div style={{ marginTop: 8 }}>
