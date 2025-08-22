@@ -1,28 +1,55 @@
 import React from "react";
 
-export function Tabs(props: {
-  tabs: { id: string; title: string; content: React.ReactNode }[];
+type Tab = { id: string; title: string; content: React.ReactNode };
+
+export function Tabs({
+  tabs,
+  activeId,
+  onChange
+}: {
+  tabs: Tab[];
   activeId: string;
   onChange: (id: string) => void;
 }) {
   return (
     <>
       <div className="tabbar" role="tablist" aria-label="Dashboard Sections">
-        {props.tabs.map(t => (
-          <button
+        {tabs.map(t => {
+          const tabId = `tab-${t.id}`;
+          const panelId = `panel-${t.id}`;
+          const isActive = activeId === t.id;
+          return (
+            <button
+              key={t.id}
+              id={tabId}
+              role="tab"
+              aria-selected={isActive}
+              aria-controls={panelId}
+              className="tab"
+              onClick={() => onChange(t.id)}
+            >
+              {t.title}
+            </button>
+          );
+        })}
+      </div>
+
+      {tabs.map(t => {
+        const tabId = `tab-${t.id}`;
+        const panelId = `panel-${t.id}`;
+        const isActive = activeId === t.id;
+        return (
+          <div
             key={t.id}
-            role="tab"
-            aria-selected={props.activeId === t.id}
-            className="tab"
-            onClick={() => props.onChange(t.id)}
+            id={panelId}
+            role="tabpanel"
+            aria-labelledby={tabId}
+            hidden={!isActive}
           >
-            {t.title}
-          </button>
-        ))}
-      </div>
-      <div role="tabpanel" aria-labelledby={props.activeId}>
-        {props.tabs.find(t => t.id === props.activeId)?.content}
-      </div>
+            {isActive && t.content}
+          </div>
+        );
+      })}
     </>
   );
 }

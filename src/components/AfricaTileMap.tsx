@@ -33,7 +33,7 @@ export default function AfricaTileMap({ regions }: { regions: RegionImpact[] }) 
           const X = l.x * (tile + gap), Y = l.y * (tile + gap);
           return (
             <g key={l.region} transform={`translate(${X},${Y})`}>
-              <rect width={tile} height={tile} rx={8} fill="#0f1420" stroke="var(--ring)"></rect>
+              <rect className="tile" width={tile} height={tile} rx={8}></rect>
               <text x={8} y={16} fontSize={12} fill="var(--ink)">{r.region}</text>
 
               {/* Disbursement bar */}

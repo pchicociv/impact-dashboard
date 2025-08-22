@@ -1,29 +1,85 @@
 :root{
-  --bg:#0a0d12;
-  --panel:#121722;
-  --ink:#eef2f7;
-  --muted:#9aa6b2;
-  --accent:#66c2a5; /* money */
-  --accent-2:#8da0cb; /* projects */
-  --accent-3:#fc8d62; /* trade */
-  --accent-4:#e78ac3; /* jobs/people */
-  --ring:#2a3a52;
+  /* --- Trade Impact Lounge palette (from your screenshot) --- */
+  /* Teals/Greens */
+  --teal-100:#EAF6F4;   /* very light background */
+  --teal-150:#D7ECE8;   /* section panels (Explore Our Impact) */
+  --teal-200:#C2E3DD;   /* light cards on teal sections */
+  --teal-300:#9FD3C6;   /* soft accent */
+  --teal-600:#2A8C82;   /* medium teal (buttons, tabs) */
+  --teal-700:#18786F;   /* deep teal (headers on light bg) */
+  --green-500:#33B990;  /* brand green (primary CTA, money) */
+
+  /* Gold/yellow accent from hero/buttons */
+  --gold-500:#F3C613;
+
+  /* Surfaces & text */
+  --bg:#EAF6F4;         /* page */
+  --panel:#FFFFFF;      /* cards/panels */
+  --panel-soft:#F6FBFA; /* soft white for subtle contrast */
+  --ink:#0F2D2E;        /* primary text (deep teal) */
+  --muted:#5D7A7F;      /* secondary text */
+  --ring:#CFE0DC;       /* borders / outlines */
+  --shadow-elev: 0 1px 2px rgba(6,44,40,.06), 0 10px 24px rgba(6,44,40,.06);
+
+  /* Metric families → chart accents */
+  --accent:var(--green-500); /* money */
+  --accent-2:var(--teal-600);/* projects */
+  --accent-3:var(--gold-500);/* trade */
+  --accent-4:var(--teal-700);/* jobs/people */
 }
+
+/* ---- Base ---- */
 *{box-sizing:border-box}
 html,body,#root{height:100%}
-body{margin:0;font:14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";}
-body{background:var(--bg);color:var(--ink)}
-a{color:inherit}
+body{
+  margin:0;
+  font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans";
+  background:var(--bg);
+  color:var(--ink);
+}
+a{color:inherit;text-decoration:none}
 .container{max-width:1200px;margin:0 auto;padding:24px}
-.panel{background:var(--panel);border:1px solid var(--ring);border-radius:12px;padding:16px}
+
+/* ---- Panels / cards ---- */
+.panel{
+  background:var(--panel);
+  border:1px solid var(--ring);
+  border-radius:12px;
+  padding:16px;
+  box-shadow:var(--shadow-elev);
+}
+.panel.soft{background:var(--panel-soft)}
+
 .row{display:flex;gap:12px;flex-wrap:wrap}
 .hstack{display:flex;gap:8px;align-items:center}
-.title{font-size:18px;margin:0 0 8px}
+
+.title{font-size:22px;margin:0 0 4px;color:var(--teal-700)}
 .subtitle{color:var(--muted);margin:0 0 8px}
-.badge{padding:2px 8px;border-radius:999px;background:#1d2433;border:1px solid var(--ring);color:var(--ink)}
+
+.badge{
+  padding:2px 8px;border-radius:999px;
+  background:var(--panel-soft);
+  border:1px solid var(--ring);
+  color:var(--ink);
+}
+
+/* ---- Tabs ---- */
 .tabbar{display:flex;gap:8px;margin:16px 0}
-.tab{padding:8px 12px;border-radius:8px;border:1px solid var(--ring);background:#121722;cursor:pointer}
-.tab[aria-selected="true"]{outline:2px solid var(--ring);background:#0f1420}
+.tab{
+  padding:8px 12px;border-radius:8px;
+  border:1px solid var(--ring);
+  background:var(--panel);
+  cursor:pointer;color:var(--teal-700);
+}
+.tab[aria-selected="true"]{
+  outline:2px solid var(--teal-600);
+  outline-offset:1px;
+  color:#fff;
+  background:linear-gradient(180deg,var(--teal-600),var(--teal-700));
+  border-color:transparent;
+}
+
+/* ---- Grids ---- */
 .grid{display:grid;gap:12px}
 .grid.cols-2{grid-template-columns:repeat(2,1fr)}
 .grid.cols-3{grid-template-columns:repeat(3,1fr)}
@@ -31,4 +87,39 @@ a{color:inherit}
 .metric-card{flex:1 1 260px;min-width:260px}
 .caption{color:var(--muted);font-size:12px}
 hr.sep{border:0;border-top:1px solid var(--ring);margin:16px 0}
-select,button{background:#0f1420;color:var(--ink);border:1px solid var(--ring);border-radius:8px;padding:6px 8px}
+
+/* ---- Inputs / buttons ---- */
+select,button{
+  background:var(--panel);
+  color:var(--ink);
+  border:1px solid var(--ring);
+  border-radius:8px;
+  padding:6px 8px;
+}
+select:focus,button:focus{outline:2px solid var(--teal-600);outline-offset:2px}
+button.primary{
+  background:linear-gradient(180deg,var(--green-500),#25a580);
+  color:#fff;border-color:transparent;
+}
+button.warn{
+  background:linear-gradient(180deg,var(--gold-500),#d6ab12);
+  color:#122; border-color:transparent;
+}
+
+/* ---- Chart helpers ---- */
+.bar-frame{
+  width:200px;height:12px;border-radius:6px;
+  background:var(--panel-soft);
+  border:1px solid var(--ring);
+}
+.bar-fill{height:12px;background:var(--accent)}
+.unit-dot{width:8px;height:8px;border-radius:2px;background:var(--accent-2)}
+.jobs-emph{color:var(--accent-4)}
+
+/* ---- Africa tile map ---- */
+svg .tile{
+  fill:var(--panel-soft);
+  stroke:var(--ring);
+}
+svg .label{fill:var(--ink)}
+svg .muted{fill:var(--muted)}
