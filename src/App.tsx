@@ -11,6 +11,7 @@ import {
   regions,
   sdgs,
   YEAR,
+  govRevenueItems,
 } from "./data/mock";
 import CatalyticLeverageRings from "./components/CatalyticLeverageRings";
 import IntraAfricanShareMeter from "./components/IntraAfricanShareMeter";
@@ -18,6 +19,7 @@ import { leverageItems, intraShareItems } from "./data/mock";
 import type { HeadlineMetricDatum } from "./types";
 import LegendDelta from "./components/LegendDelta";
 import SectionHeader from "./components/SectionHeader";
+import GovRevenueMultiplier from "./components/GovRevenueMultiplier";
 
 export default function App() {
   const [year, setYear] = useState(YEAR);
@@ -71,7 +73,10 @@ export default function App() {
             title: "Impact by Sector",
             content: (
               <>
-              <SectionHeader title="Impact by Sector" helpKey="impactBySector" />
+                <SectionHeader
+                  title="Impact by Sector"
+                  helpKey="impactBySector"
+                />
                 <p className="caption">
                   Total Disbursement ($M), Projects, Jobs per $1M.
                 </p>
@@ -84,7 +89,10 @@ export default function App() {
             title: "Impact by Region",
             content: (
               <>
-              <SectionHeader title="Impact by Region" helpKey="impactByRegion" />
+                <SectionHeader
+                  title="Impact by Region"
+                  helpKey="impactByRegion"
+                />
                 <p className="caption">
                   Intra-African Trade, Manufactured Exports, SMEs, Jobs,
                   Disbursement.
@@ -98,7 +106,10 @@ export default function App() {
             title: "SDG Contribution",
             content: (
               <>
-              <SectionHeader title="SDG Contribution" helpKey="sdgContribution" />
+                <SectionHeader
+                  title="SDG Contribution"
+                  helpKey="sdgContribution"
+                />
                 <p className="caption">Top 9 SDGs</p>
                 <SdgWaffleGrid stats={sdgs} />
               </>
@@ -109,11 +120,27 @@ export default function App() {
             title: "Insights",
             content: (
               <>
-                 <SectionHeader title="Catalytic Leverage" helpKey="catalyticLeverage" />
+                <SectionHeader
+                  title="Catalytic Leverage"
+                  helpKey="catalyticLeverage"
+                />
                 <CatalyticLeverageRings items={leverageItems} />
                 <div style={{ height: 12 }} />
-                <SectionHeader title="Intra-African Trade Share" helpKey="intraAfricanTradeShare" />
+                <SectionHeader
+                  title="Intra-African Trade Share"
+                  helpKey="intraAfricanTradeShare"
+                />
                 <IntraAfricanShareMeter items={intraShareItems} />
+                 <div style={{ height: 12 }} />
+                <SectionHeader
+                  title="Government‑Revenue Multiplier"
+                  helpKey="governmentRevenueMultiplier"
+                />
+                <GovRevenueMultiplier
+                  items={govRevenueItems}
+                  thresholdOk={2.0}
+                  thresholdGood={4.0}
+                />
               </>
             ),
           },

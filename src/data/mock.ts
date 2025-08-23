@@ -66,3 +66,62 @@ export const intraShareItems = regions.map(r => ({
   intraUS: r.intraAfricanTradeUS,
   totalUS: r.intraAfricanTradeUS + r.manufacturedExportsUS
 }));
+
+import type { GovRevItem } from "../components/GovRevenueMultiplier";
+
+export const govRevenueItems: GovRevItem[] = [
+  {
+    id: "fac-1",
+    name: "Industrial Park Expansion",
+    bankUS: 120_000_000,
+    govRevenueUS: 540_000_000,   // 4.5×
+    breakdown: {
+      vat: 210_000_000,
+      corporateTax: 220_000_000,
+      duties: 60_000_000,
+      other: 50_000_000,
+      period: "FY2024",
+      note: "Includes payroll levies and concession fees under 'Other'."
+    }
+  },
+  {
+    id: "fac-2",
+    name: "Solar IPP",
+    bankUS: 80_000_000,
+    govRevenueUS: 220_000_000,   // 2.8×
+    breakdown: {
+      vat: 70_000_000,
+      corporateTax: 110_000_000,
+      duties: 20_000_000,
+      other: 20_000_000,
+      period: "FY2024"
+    }
+  },
+  {
+    id: "fac-3",
+    name: "SME Credit Line",
+    bankUS: 150_000_000,
+    govRevenueUS: 390_000_000,   // 2.6×
+    breakdown: {
+      vat: 120_000_000,
+      corporateTax: 180_000_000,
+      duties: 30_000_000,
+      other: 60_000_000,
+      period: "FY2024"
+    }
+  },
+  {
+    id: "fac-4",
+    name: "Rail Logistics",
+    bankUS: 60_000_000,
+    govRevenueUS: 360_000_000,   // 6.0×
+    breakdown: {
+      vat: 140_000_000,
+      corporateTax: 160_000_000,
+      duties: 30_000_000,
+      other: 30_000_000,
+      period: "FY2024",
+      note: "Upfront concession and access fees boosted 'Other'."
+    }
+  }
+];

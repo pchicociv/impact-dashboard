@@ -6,7 +6,6 @@ type Item = { id: string; name: string; intraUS: number; totalUS: number };
 export default function IntraAfricanShareMeter({ items }: { items: Item[] }) {
   return (
     <div className="panel">
-      <h3 className="title" style={{ marginBottom: 12 }}>Intra-African Trade Share</h3>
       <div className="share-grid">
         {items.map(it => {
           const total = it.totalUS || 0;

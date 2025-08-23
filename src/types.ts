@@ -20,7 +20,8 @@ export type HelpTopicKey =
   | "impactByRegion"
   | "sdgContribution"
   | "catalyticLeverage"
-  | "intraAfricanTradeShare";
+  | "intraAfricanTradeShare"
+  | "governmentRevenueMultiplier"; 
 
 export interface HeadlineMetricDatum {
   key: HeadlineMetricKey;

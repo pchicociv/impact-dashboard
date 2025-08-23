@@ -48,7 +48,6 @@ export default function CatalyticLeverageRings({
 
   return (
     <div className="panel">
-      <h3 className="title" style={{ marginBottom: 12 }}>Catalytic Leverage (other / bank)</h3>
       <div className="insights-grid">
         {items.map((it) => {
           const lev = it.bankUS <= 0 ? 0 : it.otherUS / it.bankUS; // “per $1” definition

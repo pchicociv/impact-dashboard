@@ -321,3 +321,71 @@ svg .muted { fill: var(--muted); }
   font-size:18px;
   color: var(--teal-700);
 }
+
+/* === Government‑Revenue Multiplier (layout revamp) === */
+
+.grm-shell{ display:grid; grid-template-columns:96px 1fr; gap:12px; align-items:start; }
+.grm-axisCol{ position:relative; }
+.grm-axis{
+  position: sticky; top: 8px;
+  /* height and margin-top are now set inline from JS: style={{ height: axisH, marginTop: axisTop }} */
+  width:72px; border-left:1px solid var(--ring);
+}
+
+.grm-tick{ position: absolute; left: -1px; transform: translateY(50%); display:flex; align-items:center; gap:6px; }
+.grm-line{ width:16px; height:2px; display:inline-block; }
+.grm-line.grm-ok{ background: var(--accent-3); }
+.grm-line.grm-good{ background: var(--accent); }
+.grm-label{ font-size:12px; color:var(--muted); transform: translateX(2px); }
+.grm-top,.grm-bottom{ position:absolute; left:-1px; color:var(--muted); font-size:12px; }
+.grm-top{ top:-8px; transform: translateY(-100%); }
+.grm-bottom{ bottom:-8px; transform: translateY(100%); }
+
+/* Independent cards grid so tiles flow nicely */
+.grm-cards{
+  display:grid;
+  gap:12px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  align-items:start;
+}
+
+/* Tiles */
+.grm-card{ padding: 10px; overflow: visible; } /* allow popover overflow */
+.grm-tile{ display:grid; grid-template-columns: 60px 1fr; align-items:center; gap:10px; }
+.grm-svg{ width:60px; height:auto; display:block; }
+.grm-svg-wrap{ position:relative; outline:none; cursor:pointer; }
+.grm-svg-wrap:focus-visible{ box-shadow: 0 0 0 2px var(--accent-3); border-radius:6px; }
+
+.grm-name{ font-weight:600; line-height:1.2; }
+.grm-values{ display:grid; gap:2px; }
+.grm-mult strong{ color: var(--teal-700); }
+
+/* Popover with auto flip */
+.popover{
+  position:absolute; z-index:10; top:-6px; min-width:220px; max-width:300px;
+  background:var(--panel); border:1px solid var(--ring); box-shadow:0 8px 20px rgba(0,0,0,.08);
+  border-radius:8px; padding:10px 10px 8px;
+}
+.popover.right{ left: 70px; }     /* to the right of thermometer */
+.popover.left{ right: 70px; }     /* flip to the left */
+.popover.right:before,
+.popover.left:before,
+.popover.right:after,
+.popover.left:after{ content:""; position:absolute; top:18px; border-style:solid; }
+.popover.right:before{ left:-7px; border-width:7px; border-color:transparent var(--ring) transparent transparent; }
+.popover.right:after{ left:-6px; border-width:6px; border-color:transparent var(--panel) transparent transparent; }
+.popover.left:before{ right:-7px; border-width:7px; border-color:transparent transparent transparent var(--ring); }
+.popover.left:after{ right:-6px; border-width:6px; border-color:transparent transparent transparent var(--panel); }
+
+.popover-head{ display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center; margin-bottom:6px; }
+.popover-head .tag{ font-size:11px; padding:2px 6px; border-radius:999px; background:var(--panel-soft); color:var(--muted); }
+.popover-body .kv{ display:grid; grid-template-columns:1fr auto; gap:8px; align-items:baseline; margin:2px 0; }
+.popover-body .kv span{ color:var(--muted); }
+.popover-body .kv strong{ white-space:nowrap; }
+.popover .muted{ color:var(--muted); font-style:normal; }
+
+@media (max-width: 720px){
+  .grm-shell{ grid-template-columns: 1fr; }
+  .grm-axis{ position:static; height: 140px; }
+  .grm-cards{ grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+}
