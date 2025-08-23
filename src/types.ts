@@ -15,6 +15,13 @@ export type HeadlineMetricKey =
   | "peopleBenefited"
   | "subLoansToSMEs";
 
+export type HelpTopicKey =
+  | "impactBySector"
+  | "impactByRegion"
+  | "sdgContribution"
+  | "catalyticLeverage"
+  | "intraAfricanTradeShare";
+
 export interface HeadlineMetricDatum {
   key: HeadlineMetricKey;
   label: string;
@@ -33,7 +40,12 @@ export interface SectorImpact {
 }
 
 export interface RegionImpact {
-  region: "West Africa" | "North Africa" | "Central Africa" | "Southern Africa" | "East Africa";
+  region:
+    | "West Africa"
+    | "North Africa"
+    | "Central Africa"
+    | "Southern Africa"
+    | "East Africa";
   totalDisbursementM: number; // $M
   projects: number;
   intraAfricanTradeUS: number; // US$

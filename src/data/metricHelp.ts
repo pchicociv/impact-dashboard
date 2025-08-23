@@ -1,0 +1,127 @@
+import type { HeadlineMetricKey } from "../types";
+import type { HelpTopicKey } from "../types";
+
+type Help = { title: string; what: string; why: string; how: string };
+
+/* --- Headline metrics (you already had these; keep/edit freely) --- */
+export const metricHelp: Record<HeadlineMetricKey, Help> = {
+  totalAmountDisbursed: {
+    title: "Total Amount Disbursed (US$)",
+    what: "Sum of funds disbursed by Afreximbank for all active facilities within the selected period.",
+    why: "Shows the scale of capital deployed and relates to leverage, pipeline execution and portfolio momentum.",
+    how: "Left dot is previous period, right dot is current. A downward slope means lower disbursement; labels show exact amounts."
+  },
+  investmentAttracted: {
+    title: "Investment attracted from within and outside Africa (US$)",
+    what: "Total third-party capital mobilized alongside Afreximbank financing in the selected period.",
+    why: "Measures catalytic effect—how Afreximbank funding crowds in other investors.",
+    how: "Bigger rise indicates stronger crowd-in. Pair with Catalytic Leverage for the other/bank ratio."
+  },
+  projectsFundedTotal: {
+    title: "Total number of Projects Funded",
+    what: "Count of unique projects that received disbursement this period.",
+    why: "Shows reach and activity volume beyond dollars.",
+    how: "Up-slope = more projects; compare with disbursement to see intensity per project."
+  },
+  projectsFundedNew: {
+    title: "New Projects Funded",
+    what: "Projects receiving first-time disbursement during the period.",
+    why: "Signals pipeline growth and additionality.",
+    how: "Read together with Existing Projects to see balance between new vs follow-on support."
+  },
+  projectsFundedExisting: {
+    title: "Existing Projects Funded",
+    what: "Projects receiving additional disbursement on existing facilities.",
+    why: "Shows execution on multi-tranche programs and portfolio support.",
+    how: "If this rises while total projects is flat, average ticket per project may be increasing."
+  },
+  intraAfricanTradeFacilitated: {
+    title: "Intra-African Trade Facilitated (US$)",
+    what: "Value of supported trade flows occurring within Africa.",
+    why: "Tracks progress against the intra-African mandate and AfCFTA objectives.",
+    how: "Up-slope = more intra-African value. See Region cards for where it occurs."
+  },
+  manufacturedExportsFacilitated: {
+    title: "Manufactured Exports Facilitated (US$)",
+    what: "Value of manufactured goods exports supported by financed projects.",
+    why: "Indicates export diversification and industrialization.",
+    how: "Interpret with intra-African share to understand destination mix."
+  },
+  paymentServicesAccessingEntities: {
+    title: "African Entities Accessing Payment Services",
+    what: "Unique African entities that used Afreximbank payment services.",
+    why: "Reflects digital reach and network adoption.",
+    how: "If available, pair with activation rate (active / onboarded) for quality of usage."
+  },
+  smesConnectedToMarkets: {
+    title: "African SMEs Connected to Markets",
+    what: "SMEs receiving market linkage or export readiness support.",
+    why: "Speaks to inclusion and last-mile impact.",
+    how: "Track SMEs per $1M in the Sector view for efficiency."
+  },
+  banksOnboarded: {
+    title: "African Banks Onboarded",
+    what: "Banks onboarded to Afreximbank platforms or programs.",
+    why: "Expands distribution capacity and regional coverage.",
+    how: "Consider together with payment services and intra-African trade for network effects."
+  },
+  jobsCreatedSustained: {
+    title: "Jobs Created/Sustained",
+    what: "Direct and indirect jobs created or sustained by supported projects.",
+    why: "Core development outcome within TDIA.",
+    how: "Use jobs per $1M in Sector view for intensity; watch trend direction in this slope."
+  },
+  peopleBenefited: {
+    title: "People Benefited",
+    what: "People gaining service access or improvements (e.g., power, transport, finance).",
+    why: "Captures social reach beyond formal jobs.",
+    how: "Combine with sector composition to interpret who is being reached."
+  },
+  subLoansToSMEs: {
+    title: "Sub Loans to SMEs",
+    what: "Number of SME sub-loans disbursed via financial intermediaries.",
+    why: "Indicates SME penetration from wholesale lines to retail outcomes.",
+    how: "Compare with SMEs Supported to assess conversion."
+  }
+};
+
+/* --- Section topics (new) --- */
+export const topicHelp: Record<HelpTopicKey, Help> = {
+  impactBySector: {
+    title: "Impact by Sector",
+    what: "Compares sectors on three lenses: Total Disbursement (US$M), Number of Projects, and Jobs per US$1M.",
+    why: "Reveals where capital is deployed, how many initiatives it touches, and how labour-intensive outcomes are.",
+    how: "Bars share a common scale across sectors. Each small square ≈ 1 project (capped for display). The Jobs per US$1M figure is a quick efficiency ratio—look for sectors that deliver more jobs with comparable funding."
+  },
+  impactByRegion: {
+    title: "Impact by Region",
+    what: "Shows Afreximbank’s footprint across subregions: Disbursement (US$M), Intra-African Trade (US$), Manufactured Exports (US$), SMEs supported, plus Projects and Jobs.",
+    why: "Highlights geographic balance and alignment with intra-African trade and manufacturing mandates.",
+    how: "All bars use consistent scales per metric. Read left→right in each card; the footer lines summarize projects and jobs—use them to balance volume vs outcomes."
+  },
+  sdgContribution: {
+    title: "SDG Contribution",
+    what: "Percentage of projects tagged to each Sustainable Development Goal (top nine shown).",
+    why: "Connects portfolio activity to development priorities (jobs, industry, climate, etc.).",
+    how: "Each waffle grid is 10×10 (each square ≈ 1%). Sums across SDGs may exceed 100% because projects can contribute to multiple SDGs."
+  },
+  catalyticLeverage: {
+    title: "Catalytic Leverage (other / bank)",
+    what: "Crowded-in capital per US$1 provided by Afreximbank (other ÷ bank).",
+    why: "Measures catalytic effect—how the Bank’s participation mobilizes additional investors.",
+    how: "Inner ring represents the Bank’s baseline ($1). The outer ring fills to the leverage ratio; colour bands mark thresholds (e.g., ≥3× acceptable, ≥4.5× strong)."
+  },
+  intraAfricanTradeShare: {
+    title: "Intra-African Trade Share",
+    what: "Share of supported trade flows that occur within Africa (intra ÷ total).",
+    why: "Core mandate indicator for regional integration and AfCFTA.",
+    how: "100% stacked bar: gold = intra-African; pale segment = extra-African. Badge shows the exact percent; labels show intra and total amounts."
+  }
+};
+
+/* --- Unified map for the Help Drawer --- */
+export type HelpKey = HeadlineMetricKey | HelpTopicKey;
+export const helpContent: Record<HelpKey, Help> = {
+  ...metricHelp,
+  ...topicHelp
+};
