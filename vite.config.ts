@@ -7,6 +7,7 @@ const isDevContainer = process.env.DEVCONTAINER === 'true';
 
 export default defineConfig({
   plugins: [react()],
+  base: '/impact-dashboard/',
   server: {
     host: true,          // = 0.0.0.0
     port: 5173,
