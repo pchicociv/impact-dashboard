@@ -8,7 +8,7 @@
   },
   "postCreateCommand": "npm install && npm install react react-dom d3 && npm install -D @vitejs/plugin-react && npm install -D vite typescript @types/react @types/react-dom",
   "mounts": [
-    "source=afreximbank-impact-dashboard-vite-cache,target=/workspaces/afreximbank-impact-dashboard/node_modules/.vite,type=volume"
+    "source=impact-dashboard-vite-cache,target=/workspaces/impact-dashboard/node_modules/.vite,type=volume"
   ],
   "remoteUser": "root",
   "customizations": {

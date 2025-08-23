@@ -31,7 +31,7 @@ export default function App() {
     <div className="container">
       <h1 className="title">Development Impact Dashboard</h1>
       <p className="subtitle">
-        Aligned with Afreximbank indicators (Headline, Sector, Region, SDGs).
+        Aligned indicators (Headline, Sector, Region, SDGs).
       </p>
 
       <div className="hstack" style={{ gap: 12, marginBottom: 12 }}>
