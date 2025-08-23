@@ -21,7 +21,8 @@ export type HelpTopicKey =
   | "sdgContribution"
   | "catalyticLeverage"
   | "intraAfricanTradeShare"
-  | "governmentRevenueMultiplier"; 
+  | "governmentRevenueMultiplier"
+  | "smeParticipationFunnel";
 
 export interface HeadlineMetricDatum {
   key: HeadlineMetricKey;
@@ -59,4 +60,14 @@ export interface SdgStat {
   sdg: string; // "SDG 7 — Affordable & Clean Energy"
   percentOfProjects: number; // 0..100
   exampleProject?: string;
+}
+
+// types.ts
+export type SmeStage = 'eligible' | 'approved' | 'disbursed' | 'active';
+
+export interface SmeFunnelItem {
+  stage: SmeStage;
+  total: number;          // total SMEs at this stage
+  womenLed?: number;      // count of women-led SMEs at this stage
+  youthLed?: number;      // count of youth-led SMEs at this stage
 }

@@ -12,6 +12,8 @@ import {
   sdgs,
   YEAR,
   govRevenueItems,
+  smeFunnelItems,
+  smeFunnelInvestmentUSD,
 } from "./data/mock";
 import CatalyticLeverageRings from "./components/CatalyticLeverageRings";
 import IntraAfricanShareMeter from "./components/IntraAfricanShareMeter";
@@ -20,6 +22,7 @@ import type { HeadlineMetricDatum } from "./types";
 import LegendDelta from "./components/LegendDelta";
 import SectionHeader from "./components/SectionHeader";
 import GovRevenueMultiplier from "./components/GovRevenueMultiplier";
+import SmeFunnel from "./components/SmeFunnel";
 
 export default function App() {
   const [year, setYear] = useState(YEAR);
@@ -141,6 +144,14 @@ export default function App() {
                   thresholdOk={2.0}
                   thresholdGood={4.0}
                 />
+                <SectionHeader title="SME Participation Funnel" helpKey="smeParticipationFunnel" />
+                <div className="panel">
+                  <SmeFunnel
+                    data={smeFunnelItems}
+                    totalInvestmentUSD={smeFunnelInvestmentUSD}
+                    stageForRate="active"
+                  />
+                </div>
               </>
             ),
           },

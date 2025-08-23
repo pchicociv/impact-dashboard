@@ -1,4 +1,4 @@
-import { HeadlineMetricDatum, SectorImpact, RegionImpact, SdgStat } from "../types";
+import { HeadlineMetricDatum, SectorImpact, RegionImpact, SdgStat, SmeFunnelItem } from "../types";
 
 export const YEAR = 2025;
 
@@ -125,3 +125,12 @@ export const govRevenueItems: GovRevItem[] = [
     }
   }
 ];
+
+/* ---- SME Funnel (mock) ---- */
+export const smeFunnelItems: SmeFunnelItem[] = [
+  { stage: "eligible",  total: 1200, womenLed: 320, youthLed: 410 },
+  { stage: "approved",  total: 760,  womenLed: 212, youthLed: 255 },
+  { stage: "disbursed", total: 540,  womenLed: 155, youthLed: 190 },
+  { stage: "active",    total: 480,  womenLed: 140, youthLed: 170 },
+];
+export const smeFunnelInvestmentUSD = 180_000_000; // used for SMEs per $1M

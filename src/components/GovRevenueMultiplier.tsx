@@ -33,9 +33,6 @@ export default function GovRevenueMultiplier({
 
   return (
     <div className="panel">
-      <div className="section-head">
-        <h3 className="section-title">Government‑Revenue Multiplier</h3>
-      </div>
       <p className="caption">Estimated government revenue generated per US$1 invested ({unit}). Click or hover any thermometer for a tax breakdown.</p>
 
       {/* two-column shell */}

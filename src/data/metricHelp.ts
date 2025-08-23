@@ -1,5 +1,4 @@
-import type { HeadlineMetricKey } from "../types";
-import type { HelpTopicKey } from "../types";
+import type { HeadlineMetricKey, HelpTopicKey } from "../types";
 
 type Help = { title: string; what: string; why: string; how: string };
 
@@ -122,6 +121,12 @@ export const topicHelp: Record<HelpTopicKey, Help> = {
     what: "Estimated government revenue generated per US$1 of Afreximbank financing (gov revenue ÷ bank amount) for the selected scope and period.",
     why: "Shows fiscal contribution—taxes, duties, fees—linked to supported activity, complementing jobs and trade outcomes within TDIA Pillar 2.",
     how: "Each thermometer fills to the multiplier value. Red = below the minimum threshold, gold = meets the acceptable level, green = strong performance. Thresholds are configurable in the chart.",
+  },
+  smeParticipationFunnel: {
+    title: "SME Participation Funnel",
+    what: "Shows how SMEs progress through the pipeline — from Eligible to Approved, Disbursed and Active.",
+    why: "Highlights pipeline quality and where drop-offs occur. Overlay strips show inclusion — women- and youth-led SMEs.",
+    how: "Bar width = SMEs at that stage. Hover a stage to see conversion from the previous one. The header micro-stat ‘SMEs per $1M’ divides SMEs at the selected stage by total USD disbursed.",
   },
 };
 
