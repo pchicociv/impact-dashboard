@@ -12,6 +12,9 @@ import {
   sdgs,
   YEAR,
 } from "./data/mock";
+import CatalyticLeverageRings from "./components/CatalyticLeverageRings";
+import IntraAfricanShareMeter from "./components/IntraAfricanShareMeter";
+import { leverageItems, intraShareItems } from "./data/mock";
 import type { HeadlineMetricDatum } from "./types";
 import LegendDelta from "./components/LegendDelta";
 
@@ -57,7 +60,6 @@ export default function App() {
 
       <LegendDelta showFamilies />
       <SlopeCardRow data={headline} />
-    
 
       <hr className="sep" />
 
@@ -95,6 +97,20 @@ export default function App() {
               <>
                 <p className="caption">Top 9 SDGs</p>
                 <SdgWaffleGrid stats={sdgs} />
+              </>
+            ),
+          },
+          {
+            id: "insights",
+            title: "Insights",
+            content: (
+              <>
+                <p className="caption">
+                  Catalytic leverage and Intra-African share (demo data).
+                </p>
+                <CatalyticLeverageRings items={leverageItems} />
+                <div style={{ height: 12 }} />
+                <IntraAfricanShareMeter items={intraShareItems} />
               </>
             ),
           },

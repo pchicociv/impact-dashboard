@@ -51,3 +51,18 @@ export const sdgs: SdgStat[] = [
   { sdg: "SDG 13 — Climate Action", percentOfProjects: 16, exampleProject: "Energy efficiency retrofit" },
   { sdg: "SDG 17— Partnership for the Goals", percentOfProjects: 41, exampleProject: "Pan-African trade platform" }
 ];
+
+export const leverageItems = [
+  { id: "fac-1", name: "Industrial Park Expansion", bankUS: 120_000_000, otherUS: 420_000_000 },
+  { id: "fac-2", name: "Solar IPP", bankUS: 80_000_000, otherUS: 200_000_000 },
+  { id: "fac-3", name: "SME Credit Line", bankUS: 150_000_000, otherUS: 300_000_000 },
+  { id: "fac-4", name: "Rail Logistics", bankUS: 60_000_000, otherUS: 330_000_000 }
+];
+
+// For the share meter DEMO we’ll approximate total trade as (intra + manufactured exports).
+// Replace `totalUS` with your actual total trade when available.
+export const intraShareItems = regions.map(r => ({
+  id: r.region, name: r.region,
+  intraUS: r.intraAfricanTradeUS,
+  totalUS: r.intraAfricanTradeUS + r.manufacturedExportsUS
+}));
