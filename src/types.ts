@@ -22,7 +22,8 @@ export type HelpTopicKey =
   | "catalyticLeverage"
   | "intraAfricanTradeShare"
   | "governmentRevenueMultiplier"
-  | "smeParticipationFunnel";
+  | "smeParticipationFunnel"
+  | "inclusiveJobs";
 
 export interface HeadlineMetricDatum {
   key: HeadlineMetricKey;
@@ -70,4 +71,14 @@ export interface SmeFunnelItem {
   total: number;          // total SMEs at this stage
   womenLed?: number;      // count of women-led SMEs at this stage
   youthLed?: number;      // count of youth-led SMEs at this stage
+}
+
+// Inclusive Employment small-multiple item
+export interface JobsByDemoItem {
+  scopeId: string;       // e.g., sector code or region code
+  scopeName: string;     // e.g., "Manufacturing" or "West Africa"
+  total: number;         // total jobs (FTE)
+  women: number;         // jobs held by women (subset of total)
+  youth: number;         // jobs held by youth (18–35, subset of total; overlaps men/women)
+  period?: string;       // optional label like "FY2025" or "Jan–Dec 2025"
 }

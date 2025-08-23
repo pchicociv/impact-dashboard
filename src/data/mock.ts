@@ -134,3 +134,16 @@ export const smeFunnelItems: SmeFunnelItem[] = [
   { stage: "active",    total: 480,  womenLed: 140, youthLed: 170 },
 ];
 export const smeFunnelInvestmentUSD = 180_000_000; // used for SMEs per $1M
+
+
+import type { JobsByDemoItem } from "../types";
+
+export const jobsByDemoBySector: JobsByDemoItem[] = [
+  { scopeId: "mfg", scopeName: "Manufacturing", total: 15000, women: 5200, youth: 6300, period: "FY2025" },
+  { scopeId: "power", scopeName: "Power", total: 6000, women: 1100, youth: 2200, period: "FY2025" },
+  { scopeId: "agri", scopeName: "Agriculture", total: 9200, women: 3300, youth: 4100, period: "FY2025" },
+  { scopeId: "services", scopeName: "Services", total: 4100, women: 1700, youth: 1950, period: "FY2025" },
+  { scopeId: "finance", scopeName: "Financial Intermediaries", total: 3500, women: 1500, youth: 1400, period: "FY2025" },
+  { scopeId: "construction", scopeName: "Construction", total: 2600, women: 450, youth: 920, period: "FY2025" },
+  { scopeId: "creatives", scopeName: "Creatives", total: 2200, women: 980, youth: 1320, period: "FY2025" },
+];

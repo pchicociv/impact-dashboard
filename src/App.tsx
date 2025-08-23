@@ -14,6 +14,7 @@ import {
   govRevenueItems,
   smeFunnelItems,
   smeFunnelInvestmentUSD,
+  jobsByDemoBySector,
 } from "./data/mock";
 import CatalyticLeverageRings from "./components/CatalyticLeverageRings";
 import IntraAfricanShareMeter from "./components/IntraAfricanShareMeter";
@@ -23,6 +24,7 @@ import LegendDelta from "./components/LegendDelta";
 import SectionHeader from "./components/SectionHeader";
 import GovRevenueMultiplier from "./components/GovRevenueMultiplier";
 import SmeFunnel from "./components/SmeFunnel";
+import InclusiveJobsButterfly from "./components/InclusiveJobsButterfly";
 
 export default function App() {
   const [year, setYear] = useState(YEAR);
@@ -134,7 +136,7 @@ export default function App() {
                   helpKey="intraAfricanTradeShare"
                 />
                 <IntraAfricanShareMeter items={intraShareItems} />
-                 <div style={{ height: 12 }} />
+                <div style={{ height: 12 }} />
                 <SectionHeader
                   title="Government‑Revenue Multiplier"
                   helpKey="governmentRevenueMultiplier"
@@ -144,7 +146,10 @@ export default function App() {
                   thresholdOk={2.0}
                   thresholdGood={4.0}
                 />
-                <SectionHeader title="SME Participation Funnel" helpKey="smeParticipationFunnel" />
+                <SectionHeader
+                  title="SME Participation Funnel"
+                  helpKey="smeParticipationFunnel"
+                />
                 <div className="panel">
                   <SmeFunnel
                     data={smeFunnelItems}
@@ -152,6 +157,20 @@ export default function App() {
                     stageForRate="active"
                   />
                 </div>
+
+                <SectionHeader
+                  title="Jobs Created by Demographics (Inclusive Employment)"
+                  helpKey="inclusiveJobs"
+                />
+                <InclusiveJobsButterfly
+                  title="Inclusive Employment — by Sector"
+                  items={jobsByDemoBySector}
+                  sortBy="total"
+                />
+                <SectionHeader title="Domestic Value Chain Contribution (Local content)" />
+                <SectionHeader title="Intra‑African Investment Flows (cross‑region)" />
+                <SectionHeader title="Environmental & Social Safeguard Ratings" />
+                <SectionHeader title="Trade‑Enabling Infrastructure Impact" />
               </>
             ),
           },

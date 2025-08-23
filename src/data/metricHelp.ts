@@ -128,6 +128,12 @@ export const topicHelp: Record<HelpTopicKey, Help> = {
     why: "Highlights pipeline quality and where drop-offs occur. Overlay strips show inclusion — women- and youth-led SMEs.",
     how: "Bar width = SMEs at that stage. Hover a stage to see conversion from the previous one. The header micro-stat ‘SMEs per $1M’ divides SMEs at the selected stage by total USD disbursed.",
   },
+  inclusiveJobs: {
+  title: "Inclusive Employment (Women, Men, Youth 18–35)",
+  what: "Shows who benefits from job creation: the share of jobs held by women and men, with a band indicating the share held by youth (18–35). Youth can be women or men so the band overlays both sides.",
+  why: "Gender and youth inclusion are core TDIA indicators and important to funding partners and internal strategy.",
+  how: "Each small card is a mirror bar (‘butterfly’): women on the left, men on the right; the translucent band across the centre shows the youth share of all jobs, spanning both sides. Percent labels round to whole numbers; hover any segment to see counts and shares.",
+},
 };
 
 /* --- Unified map for the Help Drawer --- */
