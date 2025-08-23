@@ -35,7 +35,7 @@ export default function InclusiveJobsButterfly({
   sortBy?: "total" | "womenShare" | "youthShare";
 }) {
   const { ref, width } = useWidth<HTMLDivElement>(360);
-  const vertical = width < 520;
+  const vertical = width < 420;
 
   const data = useMemo(() => {
     const enriched = items.map((d) => {
