@@ -389,3 +389,23 @@ svg .muted { fill: var(--muted); }
   .grm-axis{ position:static; height: 140px; }
   .grm-cards{ grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
 }
+
+/* ---- Inclusive Jobs (butterfly) ---- */
+.bfly-grid{
+  display:grid; gap:12px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+.bfly-card{ overflow:visible }
+.bfly-card .card-head{
+  display:grid; grid-template-columns:1fr auto; align-items:start; gap:8px; margin-bottom:4px;
+}
+
+
+/* Local content legend dots */
+.legend-dot.domestic{ background: var(--teal-700); }
+.legend-dot.imported{ background: var(--gold-500); }
+/* Clip <svg> content to the panel's rounded shape */
+.chart-clip {
+  overflow: hidden;
+  border-radius: var(--radius, 12px);
+}

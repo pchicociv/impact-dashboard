@@ -147,3 +147,14 @@ export const jobsByDemoBySector: JobsByDemoItem[] = [
   { scopeId: "construction", scopeName: "Construction", total: 2600, women: 450, youth: 920, period: "FY2025" },
   { scopeId: "creatives", scopeName: "Creatives", total: 2200, women: 980, youth: 1320, period: "FY2025" },
 ];
+
+
+import type { LocalContentPoint } from "../types";
+
+export const localContentSeries: LocalContentPoint[] = [
+  { t: 2021, domesticUS: 220_000_000, importedUS: 280_000_000 },
+  { t: 2022, domesticUS: 310_000_000, importedUS: 260_000_000 },
+  { t: 2023, domesticUS: 360_000_000, importedUS: 240_000_000 },
+  { t: 2024, domesticUS: 420_000_000, importedUS: 260_000_000 },
+  { t: 2025, domesticUS: 510_000_000, importedUS: 290_000_000 },
+];

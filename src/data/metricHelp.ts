@@ -129,11 +129,17 @@ export const topicHelp: Record<HelpTopicKey, Help> = {
     how: "Bar width = SMEs at that stage. Hover a stage to see conversion from the previous one. The header micro-stat ‘SMEs per $1M’ divides SMEs at the selected stage by total USD disbursed.",
   },
   inclusiveJobs: {
-  title: "Inclusive Employment (Women, Men, Youth 18–35)",
-  what: "Shows who benefits from job creation: the share of jobs held by women and men, with a band indicating the share held by youth (18–35). Youth can be women or men so the band overlays both sides.",
-  why: "Gender and youth inclusion are core TDIA indicators and important to funding partners and internal strategy.",
-  how: "Each small card is a mirror bar (‘butterfly’): women on the left, men on the right; the translucent band across the centre shows the youth share of all jobs, spanning both sides. Percent labels round to whole numbers; hover any segment to see counts and shares.",
-},
+    title: "Inclusive Employment (Women, Men, Youth 18–35)",
+    what: "Shows who benefits from job creation: the share of jobs held by women and men, with a band indicating the share held by youth (18–35). Youth can be women or men so the band overlays both sides.",
+    why: "Gender and youth inclusion are core TDIA indicators and important to funding partners and internal strategy.",
+    how: "Each small card is a mirror bar (‘butterfly’): women on the left, men on the right; the translucent band across the centre shows the youth share of all jobs, spanning both sides. Percent labels round to whole numbers; hover any segment to see counts and shares.",
+  },
+  localContent: {
+    title: "Domestic Value Chain Contribution (Local content)",
+    what: "Shows the split between inputs sourced domestically vs. imported for supported projects over time.",
+    why: "Local sourcing strengthens domestic supply chains and skills, keeps more value in-country, and aligns with the TDIA focus on local content and value addition under Strategic Intent (Pillar 1).",
+    how: "Ribbon view: The teal band is Domestic; the gold band is Imported. Each time point totals 100% of inputs (US$). Hover to see the US$ split and the domestic share. On small screens the ribbon becomes stacked bars for clarity. Mini view: The tiny 100%-stacked ribbon shows only the domestic share over time; chips on the right display the latest split. A rising teal area indicates increasing local sourcing.",
+  },
 };
 
 /* --- Unified map for the Help Drawer --- */

@@ -15,6 +15,7 @@ import {
   smeFunnelItems,
   smeFunnelInvestmentUSD,
   jobsByDemoBySector,
+  localContentSeries,
 } from "./data/mock";
 import CatalyticLeverageRings from "./components/CatalyticLeverageRings";
 import IntraAfricanShareMeter from "./components/IntraAfricanShareMeter";
@@ -25,6 +26,8 @@ import SectionHeader from "./components/SectionHeader";
 import GovRevenueMultiplier from "./components/GovRevenueMultiplier";
 import SmeFunnel from "./components/SmeFunnel";
 import InclusiveJobsButterfly from "./components/InclusiveJobsButterfly";
+import LocalSourcingRibbon from "./components/LocalSourcingRibbon";
+import LocalSourcingMini from "./components/LocalSourcingMini";
 
 export default function App() {
   const [year, setYear] = useState(YEAR);
@@ -167,7 +170,19 @@ export default function App() {
                   items={jobsByDemoBySector}
                   sortBy="total"
                 />
-                <SectionHeader title="Domestic Value Chain Contribution (Local content)" />
+                <SectionHeader
+                  title="Domestic Value Chain Contribution (Local content)"
+                  helpKey="localContent"
+                />
+                <div className="panel">
+                  <LocalSourcingRibbon data={localContentSeries} />
+                </div>
+                <div className="insights-grid" style={{ marginTop: 12 }}>
+                  <LocalSourcingMini
+                    data={localContentSeries}
+                    title="Local content (share over time)"
+                  />
+                </div>
                 <SectionHeader title="Intra‑African Investment Flows (cross‑region)" />
                 <SectionHeader title="Environmental & Social Safeguard Ratings" />
                 <SectionHeader title="Trade‑Enabling Infrastructure Impact" />

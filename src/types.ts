@@ -13,7 +13,8 @@ export type HeadlineMetricKey =
   | "banksOnboarded"
   | "jobsCreatedSustained"
   | "peopleBenefited"
-  | "subLoansToSMEs";
+  | "subLoansToSMEs"
+  | "localContent";
 
 export type HelpTopicKey =
   | "impactBySector"
@@ -81,4 +82,11 @@ export interface JobsByDemoItem {
   women: number;         // jobs held by women (subset of total)
   youth: number;         // jobs held by youth (18–35, subset of total; overlaps men/women)
   period?: string;       // optional label like "FY2025" or "Jan–Dec 2025"
+}
+
+/** Local Content time-series point (Domestic vs Imported inputs) */
+export interface LocalContentPoint {
+  t: string | number;     // e.g., 2021, "Q1-2025"
+  domesticUS: number;     // US$
+  importedUS: number;     // US$
 }
