@@ -32,6 +32,8 @@ type Props = {
   /** Initial minimum threshold (US$) to render a flow */
   minThresholdUS?: number;
   className?: string;
+  /** optional: arrows on ends (off by default) */
+  showArrows?: boolean;
 };
 
 const DEFAULT_REGIONS: RegionName[] = [
@@ -47,6 +49,7 @@ export default function IntraInvestmentFlows({
   regionsOrder = DEFAULT_REGIONS,
   minThresholdUS,
   className,
+  showArrows = false,
 }: Props) {
   // ---------- Stats ----------
   const stats = useMemo(() => {
@@ -67,8 +70,8 @@ export default function IntraInvestmentFlows({
   // ---------- Focus / filter ----------
   const [hoverRegion, setHoverRegion] = useState<RegionName | null>(null);
   const [pinnedRegion, setPinnedRegion] = useState<RegionName | null>(null);
-  const focusRegion: RegionName | null = pinnedRegion ?? hoverRegion;
-  const [hideOthers, setHideOthers] = useState(true);
+  const focusRegion = pinnedRegion ?? hoverRegion ?? null;
+  const [hideOthers, setHideOthers] = useState(false);
 
   const visible = useMemo(
     () =>
@@ -79,18 +82,24 @@ export default function IntraInvestmentFlows({
   );
 
   const shown = useMemo(() => {
-    if (!focusRegion || !hideOthers) return visible;
-    return visible.filter(
-      (f) => f.fromRegion === focusRegion || f.toRegion === focusRegion
-    );
+    const arr =
+      !focusRegion || !hideOthers
+        ? visible.slice()
+        : visible.filter(
+            (f) => f.fromRegion === focusRegion || f.toRegion === focusRegion
+          );
+    // draw thicker links first so thin ones sit on top for legibility
+    return arr.sort((a, b) => b.amountUS - a.amountUS);
   }, [visible, focusRegion, hideOthers]);
 
-  // ---------- Layout ----------
-  const { ref, w } = useWidth<HTMLDivElement>(420);
-  const size = Math.max(280, Math.min(560, w));
-  const R = size / 2 - 36;
-  const cx = size / 2;
-  const cy = size / 2;
+  // ---------- Layout (adds margin so labels don't clip) ----------
+  const { ref, w } = useWidth<HTMLDivElement>(520);
+  const inner = Math.max(320, Math.min(600, w));   // core drawing size (ring)
+  const M = 56;                                    // outer margin to avoid clipping
+  const size = inner + M * 2;                      // total SVG size
+  const R = inner / 2 - 36;                        // ring radius
+  const cx = M + inner / 2;
+  const cy = M + inner / 2;
 
   const regionAngles = useMemo(() => {
     const order = regionsOrder.filter((r, i, a) => a.indexOf(r) === i);
@@ -109,22 +118,25 @@ export default function IntraInvestmentFlows({
     [rawId]
   );
 
-  // ---------- Geometry helpers ----------
-  const polar = (ang: number, radius = R) => [
-    cx + Math.cos(ang) * radius,
-    cy + Math.sin(ang) * radius,
-  ] as const;
+  // ---- Helpers ----
+  const polar = (a: number, r = R): [number, number] => [
+    cx + Math.cos(a) * r,
+    cy + Math.sin(a) * r,
+  ];
 
-  // inward-bundled control point (no separation yet)
+  // Mid-bundle control point (span-aware so short spans don't cram labels)
   const baseControl = (a1: number, a2: number, bundle = 0.82) => {
+    // tighter bundle for long spans; looser for short spans to reduce overlap near ring
     let da = a2 - a1;
     while (da > Math.PI) da -= 2 * Math.PI;
     while (da < -Math.PI) da += 2 * Math.PI;
+    const span = Math.abs(da); // 0..PI
+    const dyn = 0.68 + 0.22 * (span / Math.PI); // 0.68..0.9
     const mid = a1 + da / 2;
-    const cR = R * (1 - 0.28);
+    const cR = R * (1 - 0.30);
     const [cxm, cym] = polar(mid, cR);
-    const bx = cx + (cxm - cx) * bundle;
-    const by = cy + (cym - cy) * bundle;
+    const bx = cx + (cxm - cx) * (bundle ?? dyn);
+    const by = cy + (cym - cy) * (bundle ?? dyn);
     return { bx, by };
   };
 
@@ -136,7 +148,7 @@ export default function IntraInvestmentFlows({
     side: number, // -1, 0, +1
     thick: number
   ) => {
-    const deltaDeg = 3 + Math.min(7, thick * 0.45); // degrees
+    const deltaDeg = 3 + Math.min(8, thick * 0.5); // degrees
     const deltaA = (Math.PI / 180) * (side !== 0 ? deltaDeg : 0);
 
     const a1o = a1 - side * deltaA;
@@ -145,7 +157,7 @@ export default function IntraInvestmentFlows({
     const [x1, y1] = polar(a1o);
     const [x2, y2] = polar(a2o);
 
-    const { bx, by } = baseControl(a1o, a2o, 0.82);
+    const { bx, by } = baseControl(a1o, a2o);
 
     // Normal to chord for control separation
     const dx = x2 - x1;
@@ -154,7 +166,7 @@ export default function IntraInvestmentFlows({
     const nx = -dy / len;
     const ny = dx / len;
 
-    const sepPx = (4 + thick * 0.35) * side;
+    const sepPx = (4 + thick * 0.35) * side; // shifted control point
     const bxo = bx + nx * sepPx;
     const byo = by + ny * sepPx;
 
@@ -208,59 +220,132 @@ export default function IntraInvestmentFlows({
     return map;
   }, [visible, regionList]);
 
-  // ---------- detect bidirectional pairs among SHOWN edges ----------
-  const indexOfRegion = (r: RegionName) => regionList.indexOf(r);
-  const keyForPair = (a: RegionName, b: RegionName) => {
-    const ai = indexOfRegion(a);
-    const bi = indexOfRegion(b);
-    return ai <= bi ? `${a}|${b}` : `${b}|${a}`;
-  };
+  // Precompute opposite-direction pairs to offset them
+  const pairSide = useMemo(() => {
+    const key = (a: string, b: string) => `${a}→${b}`;
+    const m = new Map<string, number>();
+    const exists = new Set<string>();
+    visible.forEach((f) => exists.add(key(f.fromRegion, f.toRegion)));
+    regionList.forEach((a) =>
+      regionList.forEach((b) => {
+        if (a === b) return;
+        const ab = exists.has(key(a, b));
+        const ba = exists.has(key(b, a));
+        if (ab && ba) {
+          const s = a < b ? -1 : +1;
+          m.set(key(a, b), s);
+          m.set(key(b, a), -s);
+        } else if (ab) {
+          m.set(key(a, b), 0);
+        }
+      })
+    );
+    return (a: RegionName, b: RegionName) => m.get(key(a, b)) ?? 0;
+  }, [visible, regionList]);
 
-  const biDirKeys = useMemo(() => {
-    const counts = new Map<string, number>();
-    shown.forEach((f) => {
-      const k = keyForPair(f.fromRegion, f.toRegion);
-      counts.set(k, (counts.get(k) || 0) + 1);
-    });
-    const set = new Set<string>();
-    counts.forEach((n, k) => {
-      if (n > 1) set.add(k);
-    });
-    return set;
-  }, [shown, regionList]);
-
+  // ---------- UI ----------
   return (
+    // ensure white background panel like the rest of the dashboard
     <div className={`panel ${className ?? ""}`}>
+      {/* Controls row — flexible + wraps on small widths */}
       <div
-        className="hstack"
+        className="row"
         style={{
-          justifyContent: "space-between",
-          alignItems: "flex-end",
-          marginBottom: 8,
+          alignItems: "center",
+          gap: 12,
+          flexWrap: "wrap",
         }}
       >
+        {/* tiny pictogram legend on a soft pill */}
         <div
-          className="hstack"
-          role="group"
-          aria-label="Flow controls"
-          style={{ gap: 12 }}
+          className="panel soft"
+          style={{
+            display: "flex",
+            gap: 12,
+            alignItems: "center",
+            padding: "6px 10px",
+          }}
         >
-          <label className="hstack" style={{ gap: 6 }}>
-            <span className="caption">Min flow</span>
-            <input
-              type="range"
-              min={0}
-              max={Math.max(1, Math.round(stats.max))}
-              value={Math.min(threshold, Math.round(stats.max))}
-              onChange={(e) => setThreshold(Number(e.target.value))}
-              step={Math.max(1, Math.round(stats.max / 80))}
-              aria-valuemin={0}
-              aria-valuemax={Math.round(stats.max)}
-              aria-valuenow={threshold}
-              aria-label="Minimum flow threshold"
+          <svg width="44" height="12" aria-hidden="true">
+            <path
+              d="M2,10 Q22,-8 42,10"
+              fill="none"
+              stroke="var(--accent-2)"
+              strokeWidth={4}
+              opacity={0.9}
             />
-            <span className="caption">{formatCurrencyCompact(threshold)}</span>
+          </svg>
+          <span className="caption">Flow ~ thickness</span>
+          <span className="caption">
+            • Two arcs = opposite directions • Dot marks destination
+          </span>
+        </div>
+
+        {/* Region badges */}
+        <div className="hstack" style={{ gap: 8, flexWrap: "wrap" }}>
+          {regionList.map((r, i) => {
+            const selected = focusRegion === r;
+            const t = totalsByRegion.get(r);
+            return (
+              <button
+                key={r}
+                className="badge"
+                aria-pressed={selected}
+                data-selected={selected || undefined}
+                tabIndex={i === (focusIdx % regionList.length) ? 0 : -1}
+                ref={(el) => (btnRefs.current[i] = el)}
+                onFocus={() => setFocusIdx(i)}
+                onKeyDown={(e) => onKeyRegionsButton(e, i)}
+                onMouseEnter={() => setHoverRegion(r)}
+                onMouseLeave={() => setHoverRegion(null)}
+                onClick={() => setPinnedRegion((prev) => (prev === r ? null : r))}
+                title={`${r} — Out: ${formatCurrencyCompact(
+                  t?.outUS || 0
+                )} · In: ${formatCurrencyCompact(t?.inUS || 0)}`}
+              >
+                {r}
+                <span style={{ marginLeft: 8, opacity: 0.7 }} className="caption">
+                  ⭑ out {formatCurrencyCompact(t?.outUS || 0)} • in{" "}
+                  {formatCurrencyCompact(t?.inUS || 0)}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Totals (kept compact) */}
+        <div className="hstack" style={{ gap: 8, marginLeft: "auto" }}>
+          <span className="caption">Total shown:</span>
+          <strong className="caption">
+            {formatCurrencyCompact(shown.reduce((s, f) => s + f.amountUS, 0))}
+          </strong>
+          <span className="caption">Max link:</span>
+          <strong className="caption">{formatCurrencyCompact(stats.max)}</strong>
+          <span className="caption">• Links:</span>
+          <strong className="caption">{shown.length}</strong>
+        </div>
+
+        {/* Slider cluster (now consistent and not overlapping) */}
+        <div className="hstack" style={{ gap: 10, marginLeft: 8 }}>
+          <label className="caption" htmlFor={`minflow-${uid}`}>
+            Min flow
           </label>
+          <input
+            id={`minflow-${uid}`}
+            type="range"
+            min={0}
+            max={Math.max(1, Math.round(stats.max))}
+            value={Math.min(threshold, Math.round(stats.max))}
+            onChange={(e) => setThreshold(Number(e.target.value))}
+            step={Math.max(1, Math.round(stats.max / 80))}
+            aria-valuemin={0}
+            aria-valuemax={Math.round(stats.max)}
+            aria-valuenow={threshold}
+            aria-label="Minimum flow threshold"
+            style={{ width: 180 }}
+          />
+          <span className="caption">{formatCurrencyCompact(threshold)}</span>
+
           <button
             className="badge"
             onClick={() => {
@@ -273,6 +358,7 @@ export default function IntraInvestmentFlows({
           >
             Clear focus
           </button>
+
           <label className="hstack caption" style={{ gap: 6 }}>
             <input
               type="checkbox"
@@ -280,74 +366,12 @@ export default function IntraInvestmentFlows({
               onChange={(e) => setHideOthers(e.target.checked)}
               aria-label="Only show focused region"
             />
-            Only show focused region
+            dim rest
           </label>
         </div>
       </div>
 
-      <div className="legend" aria-label="Flow legend">
-        <div className="hstack" style={{ gap: 8 }}>
-          <svg width="44" height="12" aria-hidden="true">
-            <path
-              d="M2,10 Q22,-8 42,10"
-              fill="none"
-              stroke="var(--accent-2)"
-              strokeWidth={4}
-              opacity={0.9}
-            />
-          </svg>
-          <span className="caption">Flow ~ thickness</span>
-          <span className="caption">• Two arcs show opposite directions</span>
-        </div>
-        <div className="hstack" style={{ gap: 8 }}>
-          <span className="caption">Total shown:</span>
-          <strong className="caption">
-            {formatCurrencyCompact(shown.reduce((s, f) => s + f.amountUS, 0))}
-          </strong>
-          <span className="caption">Max link:</span>
-          <strong className="caption">{formatCurrencyCompact(stats.max)}</strong>
-          <span className="caption">Links:</span>
-          <strong className="caption">{shown.length}</strong>
-        </div>
-      </div>
-
-      {/* Keyboard-friendly region list */}
-      <div
-        className="hstack"
-        style={{ gap: 6, flexWrap: "wrap", marginBottom: 6 }}
-        role="toolbar"
-        aria-label="Regions"
-      >
-        {regionList.map((r, i) => {
-          const t = totalsByRegion.get(r);
-          const selected = focusRegion === r;
-          return (
-            <button
-              key={r}
-              className="badge"
-              aria-pressed={selected}
-              data-selected={selected || undefined}
-              tabIndex={i === focusIdx ? 0 : -1}
-              ref={(el) => (btnRefs.current[i] = el)}
-              onFocus={() => setFocusIdx(i)}
-              onKeyDown={(e) => onKeyRegionsButton(e, i)}
-              onMouseEnter={() => setHoverRegion(r)}
-              onMouseLeave={() => setHoverRegion(null)}
-              onClick={() => setPinnedRegion((prev) => (prev === r ? null : r))}
-              title={`${r} — Out: ${formatCurrencyCompact(
-                t?.outUS || 0
-              )} · In: ${formatCurrencyCompact(t?.inUS || 0)}`}
-            >
-              {r}
-              <span style={{ marginLeft: 8, opacity: 0.7 }} className="caption">
-                ⭑ out {formatCurrencyCompact(t?.outUS || 0)} • in{" "}
-                {formatCurrencyCompact(t?.inUS || 0)}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
+      {/* Chart */}
       <div ref={ref} style={{ width: "100%", overflow: "hidden" }}>
         <svg
           width={size}
@@ -355,33 +379,22 @@ export default function IntraInvestmentFlows({
           role="img"
           aria-label="Chord-like flow between regions"
         >
-          <defs>
-            <marker
-              id={`arrow-${uid}`}
-              viewBox="0 0 10 10"
-              refX={9}
-              refY={5}
-              markerWidth={9}
-              markerHeight={9}
-              orient="auto"
-              markerUnits="userSpaceOnUse"
-            >
-              <path d="M0,0 L10,5 L0,10 z" fill="var(--accent-2)" />
-            </marker>
-            <filter
-              id={`glow-${uid}`}
-              x="-50%"
-              y="-50%"
-              width="200%"
-              height="200%"
-            >
-              <feGaussianBlur stdDeviation="0.9" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
+          {showArrows && (
+            <defs>
+              <marker
+                id={`arrow-${uid}`}
+                viewBox="0 0 10 10"
+                refX={9}
+                refY={5}
+                markerWidth={9}
+                markerHeight={9}
+                orient="auto"
+                markerUnits="userSpaceOnUse"
+              >
+                <path d="M0,0 L10,5 L0,10 z" fill="var(--accent-2)" />
+              </marker>
+            </defs>
+          )}
 
           {/* guide ring UNDER everything */}
           <circle
@@ -393,82 +406,95 @@ export default function IntraInvestmentFlows({
             strokeDasharray="4 6"
           />
 
-          {/* links (with non-overlapping bidirectional offsets) */}
+          {/* links */}
           <g>
             {shown.map((f, idx) => {
               const a1 = regionAngles.get(f.fromRegion)!;
               const a2 = regionAngles.get(f.toRegion)!;
-
               const thick = amountScale(f.amountUS);
+              const side = pairSide(f.fromRegion, f.toRegion);
+              const isDim =
+                !!focusRegion &&
+                f.fromRegion !== focusRegion &&
+                f.toRegion !== focusRegion;
 
-              // detect if this pair has both directions currently shown
-              const key = keyForPair(f.fromRegion, f.toRegion);
-              const isBi = biDirKeys.has(key);
+              const pathD = linkPathSeparated(a1, a2, side, thick);
 
-              // choose which side of separation: +1 for canonical A→B, -1 for B→A
-              const aIndex = indexOfRegion(f.fromRegion);
-              const bIndex = indexOfRegion(f.toRegion);
-              const fromIsCanon = aIndex <= bIndex;
-              const side = isBi ? (fromIsCanon ? +1 : -1) : 0;
-
-              const d = linkPathSeparated(a1, a2, side, thick);
-
-              const edgeHasFocus =
-                !focusRegion ||
-                f.fromRegion === focusRegion ||
-                f.toRegion === focusRegion;
-              const isDim = !!focusRegion && !edgeHasFocus && !hideOthers;
+              // destination dot position (slightly inside ring)
+              const [dx, dy] = polar(a2, R - 2);
 
               return (
-                <path
-                  key={`${f.fromRegion}->${f.toRegion}-${idx}`}
-                  d={d}
-                  fill="none"
-                  stroke="var(--accent-2)"
-                  strokeWidth={thick}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  opacity={isDim ? 0.28 : 0.98}
-                  markerEnd={`url(#arrow-${uid})`}
-                  filter={`url(#glow-${uid})`}
-                  pointerEvents="stroke"
-                >
-                  <title>{`${f.fromRegion} → ${f.toRegion}: ${formatCurrencyCompact(
-                    f.amountUS
-                  )}`}</title>
-                </path>
+                <g key={idx} aria-label={`${f.fromRegion} to ${f.toRegion}`}>
+                  <path
+                    d={pathD}
+                    fill="none"
+                    stroke="var(--accent-2)"
+                    strokeWidth={thick}
+                    opacity={isDim ? 0.16 : 0.85}
+                    markerEnd={showArrows ? `url(#arrow-${uid})` : undefined}
+                    onMouseEnter={() => {
+                      if (!pinnedRegion) setHoverRegion(f.toRegion);
+                    }}
+                    onMouseLeave={() => {
+                      if (!pinnedRegion) setHoverRegion(null);
+                    }}
+                  >
+                    <title>
+                      {`${f.fromRegion} → ${f.toRegion}: ${formatCurrencyCompact(
+                        f.amountUS
+                      )}`}
+                    </title>
+                  </path>
+
+                  {/* destination dot for direction cue (used when arrows are off) */}
+                  {!showArrows && (
+                    <circle
+                      cx={dx}
+                      cy={dy}
+                      r={Math.max(1.5, Math.min(2.8, thick * 0.28))}
+                      fill="var(--accent-2)"
+                      opacity={isDim ? 0.28 : 0.98}
+                    >
+                      <title>{`${f.fromRegion} → ${f.toRegion}: ${formatCurrencyCompact(
+                        f.amountUS
+                      )}`}</title>
+                    </circle>
+                  )}
+                </g>
               );
             })}
           </g>
 
-          {/* region nodes & labels */}
+          {/* region ticks / labels and YELLOW region dots ON TOP */}
           <g>
             {regionList.map((r) => {
-              const ang = regionAngles.get(r)!;
-              const [x, y] = polar(ang);
-              const [lx, ly] = polar(ang, R + 20);
+              const a = regionAngles.get(r)!;
+              const [x, y] = polar(a, R);
+              const [tx, ty] = polar(a, R + 14);
+              const [lx, ly] = polar(a, R + 28);
               const anchor =
-                Math.cos(ang) > 0.25
-                  ? "start"
-                  : Math.cos(ang) < -0.25
-                  ? "end"
-                  : "middle";
-              const t = totalsByRegion.get(r);
+                Math.cos(a) > 0.2 ? "start" : Math.cos(a) < -0.2 ? "end" : "middle";
               const isDim = dimmed(r);
+              const t = totalsByRegion.get(r);
+
               return (
-                <g
-                  key={r}
-                  onMouseEnter={() => setHoverRegion(r)}
-                  onMouseLeave={() => setHoverRegion(null)}
-                >
+                <g key={r} aria-label={`${r} label`}>
+                  {/* small yellow dot at region anchor */}
                   <circle
                     cx={x}
                     cy={y}
-                    r={6}
-                    fill="var(--gold-500)"
-                    stroke="var(--ring)"
-                    strokeWidth={1}
-                    opacity={isDim ? 0.4 : 1}
+                    r={3.5}
+                    fill="var(--region-dot, #FACC15)" // fallback yellow if var missing
+                    stroke="var(--ink)"
+                    strokeOpacity={0.2}
+                  />
+                  <line
+                    x1={x}
+                    y1={y}
+                    x2={tx}
+                    y2={ty}
+                    stroke="var(--ink)"
+                    strokeOpacity={isDim ? 0.25 : 0.45}
                   />
                   <text
                     x={lx}
