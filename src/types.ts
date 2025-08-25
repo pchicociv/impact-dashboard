@@ -24,7 +24,8 @@ export type HelpTopicKey =
   | "intraAfricanTradeShare"
   | "governmentRevenueMultiplier"
   | "smeParticipationFunnel"
-  | "inclusiveJobs";
+  | "inclusiveJobs"
+  | "intraInvestmentFlows";
 
 export interface HeadlineMetricDatum {
   key: HeadlineMetricKey;
@@ -89,4 +90,14 @@ export interface LocalContentPoint {
   t: string | number;     // e.g., 2021, "Q1-2025"
   domesticUS: number;     // US$
   importedUS: number;     // US$
+}
+
+// Region name type from RegionImpact for reuse
+export type RegionName = RegionImpact["region"];
+
+/** Directed cross-region investment flow (US$) */
+export interface FlowEdge {
+  fromRegion: RegionName;
+  toRegion: RegionName;
+  amountUS: number;
 }

@@ -158,3 +158,33 @@ export const localContentSeries: LocalContentPoint[] = [
   { t: 2024, domesticUS: 420_000_000, importedUS: 260_000_000 },
   { t: 2025, domesticUS: 510_000_000, importedUS: 290_000_000 },
 ];
+
+import type { FlowEdge } from "../types";
+
+export const investmentFlows: FlowEdge[] = [
+  // West → others
+  { fromRegion: "West Africa", toRegion: "North Africa", amountUS: 62_000_000 },
+  { fromRegion: "West Africa", toRegion: "Central Africa", amountUS: 44_000_000 },
+  { fromRegion: "West Africa", toRegion: "East Africa", amountUS: 38_000_000 },
+  { fromRegion: "West Africa", toRegion: "Southern Africa", amountUS: 55_000_000 },
+
+  // North → others
+  { fromRegion: "North Africa", toRegion: "West Africa", amountUS: 46_000_000 },
+  { fromRegion: "North Africa", toRegion: "Central Africa", amountUS: 16_000_000 },
+  { fromRegion: "North Africa", toRegion: "East Africa", amountUS: 22_000_000 },
+
+  // Central → others
+  { fromRegion: "Central Africa", toRegion: "West Africa", amountUS: 14_000_000 },
+  { fromRegion: "Central Africa", toRegion: "East Africa", amountUS: 12_000_000 },
+  { fromRegion: "Central Africa", toRegion: "Southern Africa", amountUS: 10_000_000 },
+
+  // East → others
+  { fromRegion: "East Africa", toRegion: "West Africa", amountUS: 28_000_000 },
+  { fromRegion: "East Africa", toRegion: "Southern Africa", amountUS: 42_000_000 },
+  { fromRegion: "East Africa", toRegion: "North Africa", amountUS: 20_000_000 },
+
+  // Southern → others
+  { fromRegion: "Southern Africa", toRegion: "West Africa", amountUS: 50_000_000 },
+  { fromRegion: "Southern Africa", toRegion: "East Africa", amountUS: 36_000_000 },
+  { fromRegion: "Southern Africa", toRegion: "North Africa", amountUS: 18_000_000 },
+];

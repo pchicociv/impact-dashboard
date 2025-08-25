@@ -140,6 +140,12 @@ export const topicHelp: Record<HelpTopicKey, Help> = {
     why: "Local sourcing strengthens domestic supply chains and skills, keeps more value in-country, and aligns with the TDIA focus on local content and value addition under Strategic Intent (Pillar 1).",
     how: "Ribbon view: The teal band is Domestic; the gold band is Imported. Each time point totals 100% of inputs (US$). Hover to see the US$ split and the domestic share. On small screens the ribbon becomes stacked bars for clarity. Mini view: The tiny 100%-stacked ribbon shows only the domestic share over time; chips on the right display the latest split. A rising teal area indicates increasing local sourcing.",
   },
+  intraInvestmentFlows: {
+  title: "Intra-African Investment Flows",
+  what: "Directed flows of Afreximbank-enabled investment moving between subregions in the selected period.",
+  why: "Reveals regional linkages—who funds whom—helping spot clusters, gaps and corridors that matter for integration.",
+  how: "Each curve connects an origin to a destination; thickness shows amount. Use the slider to hide the long tail. Hover or focus a region (arrow keys + Enter) to highlight its in/out flows. Badges next to labels show quick totals in and out.",
+},
 };
 
 /* --- Unified map for the Help Drawer --- */

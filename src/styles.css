@@ -416,3 +416,7 @@ svg .muted { fill: var(--muted); }
   box-shadow: 0 6px 18px rgba(0,0,0,.12);
   border-radius: 8px;
 }
+.badge[data-selected]{
+  outline: 2px solid var(--teal-600);
+  background: var(--panel-soft);
+}

@@ -16,6 +16,7 @@ import {
   smeFunnelInvestmentUSD,
   jobsByDemoBySector,
   localContentSeries,
+  investmentFlows,
 } from "./data/mock";
 import CatalyticLeverageRings from "./components/CatalyticLeverageRings";
 import IntraAfricanShareMeter from "./components/IntraAfricanShareMeter";
@@ -28,6 +29,7 @@ import SmeFunnel from "./components/SmeFunnel";
 import InclusiveJobsButterfly from "./components/InclusiveJobsButterfly";
 import LocalSourcingRibbon from "./components/LocalSourcingRibbon";
 import LocalSourcingMini from "./components/LocalSourcingMini";
+import IntraInvestmentFlows from "./components/IntraInvestmentFlows";
 
 export default function App() {
   const [year, setYear] = useState(YEAR);
@@ -160,7 +162,6 @@ export default function App() {
                     stageForRate="active"
                   />
                 </div>
-
                 <SectionHeader
                   title="Jobs Created by Demographics (Inclusive Employment)"
                   helpKey="inclusiveJobs"
@@ -183,7 +184,14 @@ export default function App() {
                     title="Local content (share over time)"
                   />
                 </div>
-                <SectionHeader title="Intra‑African Investment Flows (cross‑region)" />
+                <SectionHeader
+                  title="Intra‑African Investment Flows (cross‑region)"
+                  helpKey="intraInvestmentFlows"
+                />
+                <IntraInvestmentFlows
+                  flows={investmentFlows}
+                  className="stretch"
+                />
                 <SectionHeader title="Environmental & Social Safeguard Ratings" />
                 <SectionHeader title="Trade‑Enabling Infrastructure Impact" />
               </>
