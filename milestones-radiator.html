@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!--
+    FlowingData-style Milestones Radiator
+    ------------------------------------
+    1. Edita el arreglo `milestones` dentro del bloque <script> más abajo.
+       Cada objeto acepta:
+         - title (texto obligatorio)
+         - start (fecha u hora en formato ISO: "2024-06-01" o "2024-06-01T09:00")
+         - end (opcional, fecha/hora ISO cuando termina el hito)
+         - category (opcional, etiqueta corta para agrupar o colorear)
+       Guarda el archivo y vuelve a cargar la página para ver los cambios.
+
+    2. Para incrustarlo en una Wiki de Azure DevOps, abre el archivo en tu navegador,
+       copia todo el HTML (Ctrl+A, Ctrl+C) y pégalo directamente en la página Wiki
+       en modo de edición. Azure DevOps renderizará el HTML incrustado sin pasos extra.
+  -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Milestones Radiator</title>
+  <style>
+    :root {
+      --teal-100:#EAF6F4;
+      --teal-150:#D7ECE8;
+      --teal-200:#C2E3DD;
+      --teal-300:#9FD3C6;
+      --teal-600:#2A8C82;
+      --teal-700:#18786F;
+      --green-500:#33B990;
+      --gold-500:#F3C613;
+      --bg:#EAF6F4;
+      --panel:#FFFFFF;
+      --panel-soft:#F6FBFA;
+      --ink:#0F2D2E;
+      --muted:#5D7A7F;
+      --ring:#CFE0DC;
+      --shadow-elev:0 1px 2px rgba(6,44,40,.06),0 10px 24px rgba(6,44,40,.06);
+      --accent:#33B990;
+      --accent-2:#2A8C82;
+      --accent-3:#F3C613;
+      --accent-4:#0E5F5A;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans";
+      background: var(--bg);
+      color: var(--ink);
+      padding: 32px 24px 64px;
+    }
+    h1 {
+      font-size: 28px;
+      margin: 0 0 4px;
+      color: var(--teal-700);
+    }
+    p.lead { margin: 0 0 24px; color: var(--muted); }
+    .radiator {
+      display: grid;
+      gap: 16px;
+    }
+    @media (min-width: 720px) {
+      .radiator {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+    }
+    .milestone-card {
+      position: relative;
+      background: var(--panel);
+      border: 1px solid var(--ring);
+      border-radius: 14px;
+      padding: 20px 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: var(--shadow-elev);
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .milestone-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 32px rgba(10, 67, 63, .12);
+    }
+    .milestone-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      border: 2px solid transparent;
+    }
+    .milestone-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0;
+      color: var(--teal-700);
+    }
+    .milestone-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .badge {
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: var(--panel-soft);
+      border: 1px solid var(--ring);
+      font-size: 11px;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+    }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .02em;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: currentColor;
+    }
+    .progress-bar {
+      position: relative;
+      height: 10px;
+      background: var(--panel-soft);
+      border-radius: 999px;
+      border: 1px solid var(--ring);
+      overflow: hidden;
+    }
+    .progress-bar span {
+      position: absolute;
+      inset: 0;
+      width: var(--w, 0%);
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      border-radius: inherit;
+      transition: width .6s cubic-bezier(.22,.61,.36,1);
+    }
+    .dates {
+      display: grid;
+      gap: 4px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .countdown {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .milestone-card.pending::before {
+      border-color: rgba(47, 115, 110, .12);
+    }
+    .milestone-card.pending .status { color: var(--teal-600); }
+    .milestone-card.active::before {
+      border-color: rgba(51, 185, 144, .28);
+    }
+    .milestone-card.active .status { color: var(--green-500); }
+    .milestone-card.done::before {
+      border-color: rgba(93, 122, 127, .22);
+    }
+    .milestone-card.done .status { color: var(--muted); }
+    .milestone-card.done .progress-bar span {
+      background: linear-gradient(90deg, var(--teal-300), var(--teal-200));
+    }
+    time { font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Radiador de hitos</h1>
+    <p class="lead">Controla el pulso de tus proyectos con una vista compacta y actualizada de próximos entregables.</p>
+  </header>
+  <section class="radiator" id="radiator"></section>
+
+  <template id="milestone-template">
+    <article class="milestone-card">
+      <div class="milestone-head">
+        <h2 class="milestone-title"></h2>
+        <div class="milestone-meta">
+          <span class="status"><span class="status-dot"></span><span class="status-label"></span></span>
+          <span class="badge category" hidden></span>
+        </div>
+      </div>
+      <div class="dates">
+        <span class="window"></span>
+        <span class="countdown"></span>
+      </div>
+      <div class="progress-bar"><span></span></div>
+    </article>
+  </template>
+
+  <script>
+    const milestones = [
+      { title: "Kick-off equipos regionales", start: "2024-05-28T09:00", category: "Lanzamiento" },
+      { title: "Revisión de prototipo", start: "2024-06-10", end: "2024-06-14", category: "Diseño" },
+      { title: "Entrega MVP", start: "2024-07-01", end: "2024-07-05", category: "Producto" },
+      { title: "Formación usuarios clave", start: "2024-07-12", category: "Adopción" }
+    ];
+
+    const MS = {
+      minute: 60 * 1000,
+      hour: 60 * 60 * 1000,
+      day: 24 * 60 * 60 * 1000
+    };
+
+    const radiator = document.getElementById('radiator');
+    const template = document.getElementById('milestone-template');
+
+    function parseDate(value) {
+      const parsed = value instanceof Date ? value : new Date(value);
+      return isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    function normalizeMilestone(milestone) {
+      const start = parseDate(milestone.start);
+      const end = milestone.end ? parseDate(milestone.end) : null;
+      return { ...milestone, start, end };
+    }
+
+    function classifyMilestone({ start, end }, now) {
+      if (!start) return 'unknown';
+      const effectiveEnd = end || new Date(start.getTime() + MS.day);
+      if (now < start) return 'pending';
+      if (now > effectiveEnd) return 'done';
+      return 'active';
+    }
+
+    function formatWindow({ start, end }) {
+      if (!start) return 'Fecha por definir';
+      const localeOpts = { day: '2-digit', month: 'short', year: 'numeric' };
+      const startStr = start.toLocaleString('es-ES', localeOpts);
+      if (!end) {
+        return `\u25CF ${startStr}`;
+      }
+      const endStr = end.toLocaleString('es-ES', localeOpts);
+      if (startStr === endStr) {
+        return `\u25CF ${startStr}`;
+      }
+      return `\u25CF ${startStr} – ${endStr}`;
+    }
+
+    function formatRelative(ms) {
+      const abs = Math.abs(ms);
+      const days = Math.floor(abs / MS.day);
+      if (days >= 1) {
+        const hours = Math.floor((abs % MS.day) / MS.hour);
+        return `${days} día${days !== 1 ? 's' : ''}${hours ? ` y ${hours} h` : ''}`;
+      }
+      const hours = Math.floor(abs / MS.hour);
+      if (hours >= 1) {
+        const minutes = Math.floor((abs % MS.hour) / MS.minute);
+        return `${hours} h${minutes ? ` ${minutes} min` : ''}`;
+      }
+      const minutes = Math.max(1, Math.round(abs / MS.minute));
+      return `${minutes} min`;
+    }
+
+    function describeCountdown(milestone, now) {
+      const { start, end } = milestone;
+      if (!start) return 'Fecha no válida';
+      const effectiveEnd = end || new Date(start.getTime() + MS.day);
+      if (now < start) {
+        return `Comienza en ${formatRelative(start - now)}`;
+      }
+      if (now <= effectiveEnd) {
+        return `Restan ${formatRelative(effectiveEnd - now)}`;
+      }
+      return `Finalizó hace ${formatRelative(now - effectiveEnd)}`;
+    }
+
+    function progressValue(milestone, now) {
+      const { start, end } = milestone;
+      if (!start) return 0;
+      if (now <= start) return 0;
+      const effectiveEnd = end || new Date(start.getTime() + MS.day);
+      if (now >= effectiveEnd) return 1;
+      return (now - start) / (effectiveEnd - start);
+    }
+
+    function statusLabel(status) {
+      switch (status) {
+        case 'pending': return 'Pendiente';
+        case 'active': return 'En curso';
+        case 'done': return 'Finalizado';
+        default: return 'Sin fecha';
+      }
+    }
+
+    function render() {
+      const now = new Date();
+      radiator.innerHTML = '';
+      const items = milestones
+        .map(normalizeMilestone)
+        .sort((a, b) => (a.start || 0) - (b.start || 0));
+
+      items.forEach((item) => {
+        const node = template.content.firstElementChild.cloneNode(true);
+        const status = classifyMilestone(item, now);
+        node.classList.add(status);
+        node.querySelector('.milestone-title').textContent = item.title || 'Sin título';
+        node.querySelector('.status-label').textContent = statusLabel(status);
+        node.querySelector('.countdown').textContent = describeCountdown(item, now);
+        node.querySelector('.window').textContent = formatWindow(item);
+        const progress = status === 'unknown' ? 0 : progressValue(item, now);
+        node.querySelector('.progress-bar span').style.setProperty('--w', `${Math.round(progress * 100)}%`);
+
+        const badge = node.querySelector('.category');
+        if (item.category) {
+          badge.textContent = item.category;
+          badge.hidden = false;
+        } else {
+          badge.hidden = true;
+        }
+        radiator.appendChild(node);
+      });
+    }
+
+    render();
+    setInterval(render, MS.minute);
+  </script>
+</body>
+</html>
