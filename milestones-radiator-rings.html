@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Milestones Radiator · Rings</title>
+    <style>
+      :root {
+        --bg:#F4FBF9;
+        --panel:#FFFFFF;
+        --ink:#0F2D2E;
+        --muted:#5D7A7F;
+        --ring-track:#E0EFEC;
+        --ring-ghost:#C1DDD7;
+        --shadow:0 16px 28px rgba(14,95,90,.08);
+        --slider-track:#ECF5F3;
+        --palette-1:#2A8C82;
+        --palette-1-soft:#33B990;
+        --palette-2:#F3C613;
+        --palette-2-soft:#F8DA63;
+        --palette-3:#0E5F5A;
+        --palette-3-soft:#48A199;
+      }
+      *, *::before, *::after { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 40px 24px 96px;
+        font: 15px/1.5 "Inter", "Segoe UI", -apple-system, system-ui, sans-serif;
+        background: radial-gradient(circle at 10% 10%, rgba(227,245,240,.8), transparent 60%),
+          radial-gradient(circle at 90% 0%, rgba(217,238,233,.7), transparent 50%),
+          var(--bg);
+        color: var(--ink);
+      }
+      h1 {
+        margin: 0 0 6px;
+        font-size: 30px;
+        letter-spacing: -.01em;
+      }
+      p.lead {
+        margin: 0 0 28px;
+        max-width: 640px;
+        color: var(--muted);
+      }
+      .grid {
+        display: grid;
+        gap: 20px;
+      }
+      @media (min-width: 840px) {
+        .grid { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+      }
+      .ring-card {
+        background: var(--panel);
+        border-radius: 18px;
+        padding: 28px 28px 32px;
+        box-shadow: var(--shadow);
+        display: grid;
+        gap: 24px;
+        border: 1px solid rgba(15,45,46,.06);
+        position: relative;
+        overflow: hidden;
+      }
+      .ring-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(51,185,144,.08), transparent 55%);
+        opacity: 0;
+        transition: opacity .2s ease;
+        pointer-events: none;
+      }
+      .ring-card:hover::before { opacity: 1; }
+      .ring-card h2 {
+        margin: 0;
+        font-size: 18px;
+        letter-spacing: .01em;
+      }
+      .ring-card time { font-variant-numeric: tabular-nums; }
+      .ring-wrapper {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 24px;
+        align-items: center;
+      }
+      .ring {
+        width: 160px;
+        height: 160px;
+        position: relative;
+      }
+      .ring svg { width: 160px; height: 160px; transform: rotate(-90deg); }
+      .ring circle.track {
+        fill: none;
+        stroke: var(--ring-track);
+        stroke-width: 16;
+      }
+      .ring circle.ghost {
+        fill: none;
+        stroke: var(--ring-ghost);
+        stroke-width: 16;
+        stroke-dasharray: 339.292;
+        stroke-dashoffset: 0;
+        opacity: .45;
+      }
+      .ring circle.progress {
+        fill: none;
+        stroke: var(--card-accent, var(--palette-1));
+        stroke-width: 16;
+        stroke-dasharray: 339.292;
+        stroke-dashoffset: 339.292;
+        stroke-linecap: round;
+        transition: stroke-dashoffset .8s cubic-bezier(.22,.61,.36,1);
+      }
+      .ring-label {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        text-align: center;
+        pointer-events: none;
+      }
+      .ring-label span {
+        display: block;
+      }
+      .ring-label .value {
+        font-size: 28px;
+        font-weight: 700;
+      }
+      .ring-label .caption {
+        font-size: 12px;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .ring-meta {
+        display: grid;
+        gap: 12px;
+      }
+      .ring-meta dl {
+        margin: 0;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 4px 10px;
+        align-items: baseline;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .ring-meta dt {
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+      }
+      .ring-meta dd { margin: 0; }
+      .slider {
+        position: relative;
+        width: 100%;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--slider-track);
+        overflow: hidden;
+        border: 1px solid rgba(15,45,46,.08);
+      }
+      .slider span {
+        position: absolute;
+        inset: 0;
+        width: var(--w, 0%);
+        background: linear-gradient(90deg, var(--card-accent, var(--palette-1)), var(--card-accent-soft, var(--palette-1-soft)));
+        border-radius: inherit;
+        transition: width .8s cubic-bezier(.22,.61,.36,1);
+      }
+      .lane-title {
+        font-size: 12px;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: var(--muted);
+      }
+      .card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(51,185,144,.1);
+        color: var(--card-accent, var(--palette-1));
+        font-weight: 600;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        font-size: 11px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Milestones Radiator · Rings</h1>
+      <p class="lead">
+        Cada anillo muestra el porcentaje de tiempo pendiente para el hito, tomando la fecha de inicio declarada
+        o, si no existe, la fecha de arranque del proyecto para distribuir el tiempo restante.
+      </p>
+      <section class="grid" id="milestones"></section>
+    </main>
+    <template id="ring-card">
+      <article class="ring-card">
+        <div class="lane-title"></div>
+        <h2></h2>
+        <div class="ring-wrapper">
+          <div class="ring">
+            <svg viewBox="0 0 160 160" aria-hidden="true">
+              <circle class="track" cx="80" cy="80" r="54"></circle>
+              <circle class="ghost" cx="80" cy="80" r="54"></circle>
+              <circle class="progress" cx="80" cy="80" r="54"></circle>
+            </svg>
+            <div class="ring-label">
+              <span class="value"></span>
+              <span class="caption">tiempo pendiente</span>
+            </div>
+          </div>
+          <div class="ring-meta">
+            <dl class="dates">
+              <dt>Entrega</dt>
+              <dd class="end"></dd>
+              <dt>Quedan</dt>
+              <dd class="remaining"></dd>
+            </dl>
+            <div class="slider"><span></span></div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <span class="pill"></span>
+          <time class="range"></time>
+        </div>
+      </article>
+    </template>
+    <script>
+      const state = {
+        meta: {
+          ProjectStartDate: "2024-05-06T08:00:00Z",
+          ProjectEndDate: "2025-01-31T17:00:00Z",
+          Now: "2024-06-10T09:00:00Z",
+        },
+        lanes: [
+          {
+            title: "Producto",
+            palette: { primary: "var(--palette-1)", secondary: "var(--palette-1-soft)" },
+            milestones: [
+              { title: "MVP 1", end: "2024-12-02", laneLabel: "Lanzamiento MVP" },
+              { title: "MVP 2", start: "2024-08-01", end: "2025-01-15", laneLabel: "Refinamiento" }
+            ],
+          },
+          {
+            title: "Operaciones",
+            palette: { primary: "var(--palette-2)", secondary: "var(--palette-2-soft)" },
+            milestones: [
+              { title: "Piloto regional", start: "2024-06-15", end: "2024-09-20", laneLabel: "Expansión" },
+              { title: "Onboarding partners", end: "2024-10-05", laneLabel: "Partners" }
+            ],
+          },
+          {
+            title: "Marketing",
+            palette: { primary: "var(--palette-3)", secondary: "var(--palette-3-soft)" },
+            milestones: [
+              { title: "Campaña teaser", start: "2024-07-10", end: "2024-08-18", laneLabel: "Campaña" },
+              { title: "Lanzamiento oficial", end: "2024-11-01", laneLabel: "Go-to-market" }
+            ],
+          }
+        ]
+      };
+
+      const CIRCUMFERENCE = 2 * Math.PI * 54;
+
+      function parseDate(value) {
+        if (!value) return null;
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? null : date;
+      }
+
+      function formatDate(date) {
+        if (!date) return "—";
+        const options = { month: "short", day: "numeric" };
+        return date.toLocaleDateString("es-ES", options);
+      }
+
+      function distanceInWords(now, end) {
+        if (!end) return "—";
+        const diffMs = end - now;
+        if (diffMs <= 0) return "0 días";
+        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+        if (diffDays < 7) return `${diffDays} día${diffDays === 1 ? "" : "s"}`;
+        const weeks = Math.round(diffDays / 7);
+        if (weeks < 8) return `${weeks} semana${weeks === 1 ? "" : "s"}`;
+        const months = Math.round(diffDays / 30);
+        return `${months} mes${months === 1 ? "" : "es"}`;
+      }
+
+      function clamp(value, min = 0, max = 1) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      function completionRatio(item, clock) {
+        const now = clock ?? new Date();
+        const projectStart = parseDate(state.meta.ProjectStartDate) ?? now;
+        const start = parseDate(item.start) ?? projectStart;
+        const end = parseDate(item.end);
+        if (!end) return 0;
+
+        const startTime = start.getTime();
+        const endTime = end.getTime();
+        const nowTime = now.getTime();
+
+        if (endTime <= startTime) {
+          return nowTime >= endTime ? 0 : 1;
+        }
+
+        const remaining = endTime - nowTime;
+        if (remaining <= 0) {
+          return 0;
+        }
+
+        const pendingRatio = remaining / (endTime - startTime);
+        return clamp(pendingRatio);
+      }
+
+      function completionForRange(range, clock) {
+        return completionRatio(range, clock);
+      }
+
+      function render() {
+        const container = document.querySelector("#milestones");
+        const template = document.querySelector("#ring-card").content;
+        const now = parseDate(state.meta.Now) ?? new Date();
+
+        state.lanes.forEach((lane) => {
+          lane.milestones.forEach((milestone, index) => {
+            const clone = document.importNode(template, true);
+            const card = clone.querySelector(".ring-card");
+            const ratio = completionRatio(milestone, now);
+            const pendingPercent = Math.round(ratio * 100);
+            const dashOffset = CIRCUMFERENCE * (1 - ratio);
+
+            card.style.setProperty("--card-accent", lane.palette?.primary ?? "var(--palette-1)");
+            card.style.setProperty("--card-accent-soft", lane.palette?.secondary ?? "var(--palette-1-soft)");
+
+            clone.querySelector(".lane-title").textContent = lane.title;
+            clone.querySelector("h2").textContent = milestone.title;
+            clone.querySelector(".ring .progress").style.strokeDashoffset = dashOffset.toFixed(3);
+            clone.querySelector(".ring-label .value").textContent = `${pendingPercent}%`;
+            clone.querySelector(".slider span").style.setProperty("--w", `${ratio * 100}%`);
+            clone.querySelector(".ring-meta .end").textContent = formatDate(parseDate(milestone.end));
+            clone.querySelector(".ring-meta .remaining").textContent = distanceInWords(now, parseDate(milestone.end));
+            const pill = clone.querySelector(".pill");
+            pill.textContent = milestone.laneLabel ?? `Tramo ${index + 1}`;
+            const range = clone.querySelector(".range");
+            const startDate = parseDate(milestone.start) ?? parseDate(state.meta.ProjectStartDate);
+            range.textContent = `${formatDate(startDate)} – ${formatDate(parseDate(milestone.end))}`;
+
+            container.appendChild(clone);
+          });
+        });
+      }
+
+      render();
+    </script>
+  </body>
+</html>
