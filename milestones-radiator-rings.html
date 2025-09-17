@@ -52,20 +52,20 @@
     p.lead { margin: 0 0 24px; color: var(--muted); }
     .categories-grid {
       display: grid;
-      gap: 20px;
+      gap: 24px;
     }
     @media (min-width: 960px) {
       .categories-grid {
-        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
       }
     }
     .category-card {
-      background: var(--panel);
+      background: var(--card-bg, var(--panel));
       border-radius: 18px;
-      border: 1px solid var(--ring);
-      padding: 24px;
+      border: 1px solid rgba(15,45,46,0.08);
+      padding: 28px;
       display: grid;
-      gap: 20px;
+      gap: 24px;
       box-shadow: var(--shadow-elev);
     }
     .category-head {
@@ -94,16 +94,23 @@
     }
     .category-body {
       display: grid;
-      gap: 18px;
+      gap: 24px;
+    }
+    @media (min-width: 720px) {
+      .category-body {
+        grid-template-columns: minmax(240px, 0.9fr) minmax(260px, 1.1fr);
+        align-items: start;
+      }
     }
     .rings-panel {
       display: grid;
-      gap: 12px;
+      gap: 14px;
       justify-items: center;
+      width: 100%;
     }
     .chart-shell {
       position: relative;
-      width: min(260px, 100%);
+      width: min(280px, 100%);
       aspect-ratio: 1;
       display: grid;
       place-items: center;
@@ -150,13 +157,31 @@
       margin: 0;
       padding: 0;
       display: grid;
-      gap: 14px;
+      gap: 18px;
     }
     .milestone-item {
       display: grid;
       grid-template-columns: auto 1fr auto;
-      gap: 12px;
+      column-gap: 12px;
+      row-gap: 8px;
       align-items: center;
+    }
+    .progress-bar {
+      position: relative;
+      grid-column: 1 / span 3;
+      height: 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(15,45,46,0.08);
+      background: rgba(255,255,255,0.55);
+      overflow: hidden;
+    }
+    .progress-bar span {
+      position: absolute;
+      inset: 0;
+      width: var(--w, 0%);
+      border-radius: inherit;
+      background: var(--slider-color, linear-gradient(90deg, rgba(15,122,108,0.9), rgba(244,157,55,0.9)));
+      transition: width .6s cubic-bezier(.22,.61,.36,1);
     }
     .swatch {
       width: 14px;
@@ -194,6 +219,7 @@
       font-variant-numeric: tabular-nums;
       font-weight: 600;
       color: var(--teal-600);
+      justify-self: end;
     }
     time { font-variant-numeric: tabular-nums; }
   </style>
@@ -237,19 +263,28 @@
       return { ...milestone, start, end, hasExplicitStart };
     }
 
-    function buildCategoryColors(items) {
-      const palette = [
-        '#33B990',
-        '#2A8C82',
-        '#F3C613',
-        '#0E5F5A',
-        '#9FD3C6',
-        '#2F7770',
-        '#C2E3DD'
-      ];
+    const ringPalette = [
+      '#0F7A6C',
+      '#F49D37',
+      '#F45B69',
+      '#33658A',
+      '#7A77FF',
+      '#55DDE0'
+    ];
+
+    const pastelPalette = [
+      '#F2FBF8',
+      '#FFF6ED',
+      '#F4F3FF',
+      '#FFF5F8',
+      '#EEF5FF',
+      '#F9F7FF'
+    ];
+
+    function buildCategoryBackgrounds(items) {
       const unique = Array.from(new Set(items.map(item => item.category || 'Uncategorized')));
       return unique.reduce((acc, category, index) => {
-        acc[category] = palette[index % palette.length];
+        acc[category] = pastelPalette[index % pastelPalette.length];
         return acc;
       }, {});
     }
@@ -363,27 +398,11 @@
       return milestone.end ? milestone.end : new Date(start.getTime() + MS.day);
     }
 
-    function adjustLuminance(hex, lum = 0) {
-      let value = String(hex).replace(/[^0-9a-f]/gi, '');
-      if (value.length < 6) {
-        value = value[0] + value[0] + value[1] + value[1] + value[2] + value[2];
-      }
-      const clamp = (num) => Math.min(255, Math.max(0, num));
-      let result = '#';
-      for (let i = 0; i < 3; i += 1) {
-        const channel = parseInt(value.substr(i * 2, 2), 16);
-        const delta = lum < 0 ? channel * lum : (255 - channel) * lum;
-        const adjusted = clamp(channel + delta);
-        result += Math.round(adjusted).toString(16).padStart(2, '0');
-      }
-      return result;
-    }
-
-    function buildRingsChart(items, now, baseColor) {
-      const radiusBase = 44;
-      const ringSpacing = 18;
-      const strokeWidth = 16;
-      const size = 280;
+    function buildRingsChart(items, now) {
+      const radiusBase = 56;
+      const ringSpacing = 26;
+      const strokeWidth = 18;
+      const size = 320;
       const center = size / 2;
 
       const svg = document.createElementNS(SVG_NS, 'svg');
@@ -399,8 +418,8 @@
       const aggregateEnd = new Date(Math.max(...ranges.map(range => range.end.getTime())));
       const aggregateRatio = completionForRange(aggregateStart, aggregateEnd, now);
 
-      const ringColors = items.map((_, index) => adjustLuminance(baseColor, Math.min(0.45, index * 0.18)));
-      const aggregateColor = adjustLuminance(baseColor, -0.2);
+      const ringColors = items.map((_, index) => ringPalette[index % ringPalette.length]);
+      const aggregateColor = '#0F2D2E';
 
       function createCircle({ radius, stroke, ratio = null, opacity = 1 }) {
         const circle = document.createElementNS(SVG_NS, 'circle');
@@ -464,12 +483,12 @@
         categoriesContainer.innerHTML = '<p>No milestones configured.</p>';
         return;
       }
-      const categoryColors = buildCategoryColors(normalized);
+      const categoryBackgrounds = buildCategoryBackgrounds(normalized);
 
       groupByCategory(normalized).forEach(({ category, milestones: groupItems }) => {
-        const baseColor = categoryColors[category] || '#2A8C82';
         const card = document.createElement('article');
         card.className = 'category-card';
+        card.style.setProperty('--card-bg', categoryBackgrounds[category] || 'var(--panel)');
 
         const head = document.createElement('div');
         head.className = 'category-head';
@@ -488,7 +507,7 @@
 
         const ringsPanel = document.createElement('div');
         ringsPanel.className = 'rings-panel';
-        const { svg, aggregateRatio, aggregateStart, aggregateEnd, ringColors } = buildRingsChart(groupItems, now, baseColor);
+        const { svg, aggregateRatio, aggregateStart, aggregateEnd, ringColors } = buildRingsChart(groupItems, now);
         const chartShell = document.createElement('div');
         chartShell.className = 'chart-shell';
         chartShell.appendChild(svg);
@@ -561,6 +580,15 @@
           const ratio = completionRatio(item, now);
           percentLabel.textContent = `${Math.round(ratio * 100)}%`;
           li.appendChild(percentLabel);
+
+          const progress = document.createElement('div');
+          progress.className = 'progress-bar';
+          const progressFill = document.createElement('span');
+          progressFill.style.setProperty('--w', `${(ratio * 100).toFixed(1)}%`);
+          progressFill.style.setProperty('--slider-color', ringColors[index % ringColors.length]);
+          progress.appendChild(progressFill);
+          progress.setAttribute('aria-label', `${Math.round(ratio * 100)}% of the window consumed`);
+          li.appendChild(progress);
 
           list.appendChild(li);
         });
