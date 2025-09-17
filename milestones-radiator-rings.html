@@ -96,7 +96,7 @@
       display: grid;
       gap: 24px;
     }
-    @media (min-width: 720px) {
+    @media (min-width: 960px) {
       .category-body {
         grid-template-columns: minmax(240px, 0.9fr) minmax(260px, 1.1fr);
         align-items: start;
@@ -125,8 +125,9 @@
       display: grid;
       place-items: center;
       text-align: center;
-      gap: 2px;
-      padding: 16px;
+      gap: 4px;
+      width: clamp(120px, 42%, 150px);
+      height: clamp(120px, 42%, 150px);
       border-radius: 50%;
       background: rgba(255,255,255,0.92);
       box-shadow: 0 6px 16px rgba(15,45,46,.12);
@@ -134,7 +135,7 @@
     .chart-center .percent {
       font-size: 28px;
       font-weight: 700;
-      color: var(--teal-700);
+      color: var(--aggregate-color, var(--teal-700));
     }
     .chart-center .label {
       font-size: 12px;
@@ -151,6 +152,22 @@
     .overall-countdown {
       font-weight: 600;
       color: var(--ink);
+    }
+    .overall-legend {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .overall-legend::before {
+      content: '';
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      box-shadow: inset 0 0 0 1px rgba(15,45,46,.18);
+      background: var(--aggregate-color, var(--accent));
     }
     .milestone-list {
       list-style: none;
@@ -293,8 +310,7 @@
       const abs = Math.abs(ms);
       const days = Math.floor(abs / MS.day);
       if (days >= 1) {
-        const hours = Math.floor((abs % MS.day) / MS.hour);
-        return `${days} day${days !== 1 ? 's' : ''}${hours ? ` ${hours} h` : ''}`;
+        return `${days} day${days !== 1 ? 's' : ''}`;
       }
       const hours = Math.floor(abs / MS.hour);
       if (hours >= 1) {
@@ -419,7 +435,7 @@
       const aggregateRatio = completionForRange(aggregateStart, aggregateEnd, now);
 
       const ringColors = items.map((_, index) => ringPalette[index % ringPalette.length]);
-      const aggregateColor = '#0F2D2E';
+      const aggregateColor = '#2C9B88';
 
       function createCircle({ radius, stroke, ratio = null, opacity = 1 }) {
         const circle = document.createElementNS(SVG_NS, 'circle');
@@ -456,7 +472,8 @@
         aggregateRatio,
         aggregateStart,
         aggregateEnd,
-        ringColors
+        ringColors,
+        aggregateColor
       };
     }
 
@@ -507,12 +524,13 @@
 
         const ringsPanel = document.createElement('div');
         ringsPanel.className = 'rings-panel';
-        const { svg, aggregateRatio, aggregateStart, aggregateEnd, ringColors } = buildRingsChart(groupItems, now);
+        const { svg, aggregateRatio, aggregateStart, aggregateEnd, ringColors, aggregateColor } = buildRingsChart(groupItems, now);
         const chartShell = document.createElement('div');
         chartShell.className = 'chart-shell';
         chartShell.appendChild(svg);
         const center = document.createElement('div');
         center.className = 'chart-center';
+        center.style.setProperty('--aggregate-color', aggregateColor);
         const percent = document.createElement('span');
         percent.className = 'percent';
         percent.textContent = `${Math.round(aggregateRatio * 100)}%`;
@@ -527,11 +545,16 @@
         const overallWindow = document.createElement('div');
         overallWindow.className = 'overall-window';
         overallWindow.textContent = formatOverallWindow(aggregateStart, aggregateEnd);
+        ringsPanel.appendChild(overallWindow);
         const overallCountdown = document.createElement('div');
         overallCountdown.className = 'overall-countdown';
         overallCountdown.textContent = describeRange(aggregateStart, aggregateEnd, now);
-        ringsPanel.appendChild(overallWindow);
         ringsPanel.appendChild(overallCountdown);
+        const overallLegend = document.createElement('div');
+        overallLegend.className = 'overall-legend';
+        overallLegend.textContent = 'Overall completion';
+        overallLegend.style.setProperty('--aggregate-color', aggregateColor);
+        ringsPanel.appendChild(overallLegend);
 
         body.appendChild(ringsPanel);
 
@@ -577,6 +600,7 @@
 
           const percentLabel = document.createElement('span');
           percentLabel.className = 'legend-percent';
+          percentLabel.style.setProperty('color', ringColors[index]);
           const ratio = completionRatio(item, now);
           percentLabel.textContent = `${Math.round(ratio * 100)}%`;
           li.appendChild(percentLabel);
