@@ -10,6 +10,7 @@
          - start (optional ISO date or date-time)
          - end (optional ISO date or date-time)
          - category (optional label for grouping)
+       Omit "start" to fall back to `ProjectStartDate` (defined below).
     2. Copy the whole HTML and paste it into an Azure DevOps Wiki page to publish the radiator.
   -->
   <meta charset="UTF-8" />
@@ -155,6 +156,8 @@
       { title: "Pillar 2 Rating CR", url: "https://example.com/training", end: "2025-12-05", category: "CR" }
     ];
 
+    const ProjectStartDate = new Date('2025-07-14T00:00:00');
+
     const MS = {
       minute: 60 * 1000,
       hour: 60 * 60 * 1000,
@@ -169,10 +172,10 @@
       return isNaN(parsed.getTime()) ? null : parsed;
     }
 
-    function normalizeMilestone(milestone, now) {
+    function normalizeMilestone(milestone) {
       const parsedStart = milestone.start ? parseDate(milestone.start) : null;
       const hasExplicitStart = Boolean(parsedStart);
-      const start = parsedStart || new Date(now);
+      const start = parsedStart ? new Date(parsedStart) : new Date(ProjectStartDate);
       const end = milestone.end ? parseDate(milestone.end) : null;
       return { ...milestone, start, end, hasExplicitStart };
     }
@@ -195,8 +198,14 @@
 
     function describeCountdown({ start, end, hasExplicitStart }, now) {
       if (!hasExplicitStart && !end) return 'Invalid date';
-      const effectiveStart = hasExplicitStart ? start : now;
+      const effectiveStart = hasExplicitStart ? start : ProjectStartDate;
       const effectiveEnd = end || new Date(effectiveStart.getTime() + MS.day);
+      if (!hasExplicitStart) {
+        if (now <= effectiveEnd) {
+          return `Ends in ${formatRelative(effectiveEnd - now)}`;
+        }
+        return `Finished ${formatRelative(now - effectiveEnd)} ago`;
+      }
       if (now < effectiveStart) {
         return `Begins in ${formatRelative(effectiveStart - now)}`;
       }
@@ -221,15 +230,17 @@
       return `\u25CF ${startStr} – ${endStr}`;
     }
 
-    function remainingRatio({ start, end, hasExplicitStart }, now) {
+    function completionRatio({ start, end, hasExplicitStart }, now) {
       if (!hasExplicitStart && !end) return 0;
-      const effectiveStart = hasExplicitStart ? start : now;
+      const effectiveStart = hasExplicitStart ? start : ProjectStartDate;
       const effectiveEnd = end || new Date(effectiveStart.getTime() + MS.day);
-      if (now >= effectiveEnd) return 0;
-      if (now <= effectiveStart) return 1;
+      if (now >= effectiveEnd) return 1;
       const total = Math.max(effectiveEnd - effectiveStart, MS.minute);
-      const remaining = Math.max(0, effectiveEnd - now);
-      return Math.min(1, remaining / total);
+      if (now <= effectiveStart) {
+        return 0;
+      }
+      const elapsed = Math.max(0, Math.min(total, now - effectiveStart));
+      return Math.min(1, elapsed / total);
     }
 
     function statusLabel(status) {
@@ -243,9 +254,11 @@
 
     function classifyMilestone({ start, end, hasExplicitStart }, now) {
       if (!hasExplicitStart && !end) return 'unknown';
-      const effectiveStart = hasExplicitStart ? start : now;
+      const effectiveStart = hasExplicitStart ? start : ProjectStartDate;
       const effectiveEnd = end || new Date(effectiveStart.getTime() + MS.day);
-      if (now < effectiveStart) return 'pending';
+      if (now < effectiveStart) {
+        return hasExplicitStart ? 'pending' : 'active';
+      }
       if (now > effectiveEnd) return 'done';
       return 'active';
     }
@@ -254,7 +267,7 @@
       const now = new Date();
       container.innerHTML = '';
       milestones
-        .map((milestone) => normalizeMilestone(milestone, now))
+        .map((milestone) => normalizeMilestone(milestone))
         .sort((a, b) => (a.end || a.start) - (b.end || b.start))
         .forEach((item) => {
           const node = template.content.firstElementChild.cloneNode(true);
@@ -273,7 +286,7 @@
           node.querySelector('.countdown').textContent = describeCountdown(item, now);
           node.querySelector('.window').textContent = formatWindow(item);
 
-          const ratio = remainingRatio(item, now);
+          const ratio = completionRatio(item, now);
           const meter = node.querySelector('.radial-meter');
           meter.style.setProperty('--p', (ratio * 100).toFixed(2));
           meter.dataset.label = `${Math.round(ratio * 100)}%`;
