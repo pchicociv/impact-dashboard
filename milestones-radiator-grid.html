@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!--
+    FlowingData-style Milestones Radiator (Time Blocks Edition)
+    -----------------------------------------------------------
+    1. Edit the `milestones` array in the <script> section to update dates or labels.
+    2. Paste this file's raw HTML into an Azure DevOps Wiki page to share the countdown grid.
+  -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Milestones Countdown Blocks</title>
+  <style>
+    :root {
+      --teal-100:#EAF6F4;
+      --teal-150:#D7ECE8;
+      --teal-200:#C2E3DD;
+      --teal-300:#9FD3C6;
+      --teal-600:#2A8C82;
+      --teal-700:#18786F;
+      --green-500:#33B990;
+      --gold-500:#F3C613;
+      --bg:#EAF6F4;
+      --panel:#FFFFFF;
+      --panel-soft:#F6FBFA;
+      --ink:#0F2D2E;
+      --muted:#5D7A7F;
+      --ring:#CFE0DC;
+      --shadow-elev:0 1px 2px rgba(6,44,40,.06),0 10px 24px rgba(6,44,40,.06);
+      --accent:#33B990;
+      --accent-2:#2A8C82;
+      --accent-3:#F3C613;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans";
+      background: var(--bg);
+      color: var(--ink);
+      padding: 32px 24px 64px;
+    }
+    h1 {
+      font-size: 28px;
+      margin: 0 0 4px;
+      color: var(--teal-700);
+    }
+    p.lead { margin: 0 0 24px; color: var(--muted); }
+    .radiator {
+      display: grid;
+      gap: 20px;
+    }
+    @media (min-width: 720px) {
+      .radiator {
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      }
+    }
+    .milestone-card {
+      background: var(--panel);
+      border-radius: 16px;
+      border: 1px solid var(--ring);
+      padding: 24px;
+      box-shadow: var(--shadow-elev);
+      display: grid;
+      gap: 18px;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .milestone-card:hover { transform: translateY(-2px); box-shadow: 0 18px 32px rgba(10,67,63,.12); }
+    .milestone-title { font-size: 18px; font-weight: 600; margin: 0; color: var(--teal-700); }
+    .milestone-title a { color: inherit; text-decoration: none; }
+    .milestone-title a:hover { text-decoration: underline; }
+    .meta { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--muted); }
+    .badge {
+      padding: 2px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--ring);
+      background: var(--panel-soft);
+      text-transform: uppercase;
+      letter-spacing: .02em;
+      font-weight: 600;
+      font-size: 11px;
+    }
+    .grid-wrapper { display: grid; gap: 8px; }
+    .grid-header { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+    .days-left { font-size: 22px; font-weight: 600; color: var(--teal-700); }
+    .tile-grid {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(10, minmax(0, 1fr));
+      gap: 4px;
+    }
+    .tile {
+      position: relative;
+      display: block;
+      width: 100%;
+      padding-top: 100%;
+      border-radius: 6px;
+      background: var(--panel-soft);
+      border: 1px solid var(--ring);
+      box-shadow: inset 0 1px 1px rgba(15,45,46,.06);
+      transition: background .3s ease, border-color .3s ease;
+    }
+    .tile.active { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border-color: transparent; }
+    .tile.past { opacity: .25; }
+    .overflow {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--panel);
+      background: rgba(15,45,46,.55);
+      border-radius: inherit;
+      pointer-events: none;
+    }
+    .countdown { font-size: 15px; font-weight: 600; color: var(--ink); }
+    .window { font-size: 13px; color: var(--muted); }
+    .status { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 12px; letter-spacing: .02em; }
+    .status-dot { width: 8px; height: 8px; border-radius: 999px; background: currentColor; }
+    .milestone-card.pending .tile.active { background: linear-gradient(135deg, var(--gold-500), #FFDD55); }
+    .milestone-card.done .tile.active { background: linear-gradient(135deg, var(--teal-200), var(--teal-150)); }
+    .milestone-card.done .countdown { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Milestones Countdown Blocks</h1>
+    <p class="lead">Visualiza cada día que falta con un mosaico estilo FlowingData: cada cuadrado es un día restante.</p>
+  </header>
+  <section class="radiator" id="radiator"></section>
+
+  <template id="milestone-template">
+    <article class="milestone-card">
+      <div>
+        <h2 class="milestone-title"><a href="#" rel="noopener"></a></h2>
+        <div class="meta">
+          <span class="status"><span class="status-dot"></span><span class="status-label"></span></span>
+          <span class="badge category" hidden></span>
+        </div>
+      </div>
+      <div class="grid-wrapper">
+        <div class="grid-header">
+          <span class="countdown"></span>
+          <span class="days-left"></span>
+        </div>
+        <div class="tile-grid"></div>
+        <div class="window"></div>
+      </div>
+    </article>
+  </template>
+
+  <script>
+    const milestones = [
+      { title: "MVP 1", url: "https://example.com/kickoff", end: "2025-10-17", category: "MVP" },
+      { title: "MVP 2", url: "https://example.com/prototype", end: "2025-11-14", category: "MVP" },
+      { title: "Release Sprint", url: "https://example.com/mvp", start: "2025-11-17", end: "2025-11-28", category: "Release" },
+      { title: "Pillar 2 Rating CR", url: "https://example.com/training", end: "2025-12-05", category: "CR" }
+    ];
+
+    const MS = {
+      minute: 60 * 1000,
+      hour: 60 * 60 * 1000,
+      day: 24 * 60 * 60 * 1000
+    };
+
+    const TOTAL_TILES = 30;
+
+    const template = document.getElementById('milestone-template');
+    const container = document.getElementById('radiator');
+
+    function parseDate(value) {
+      const parsed = value instanceof Date ? value : new Date(value);
+      return isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    function normalizeMilestone(milestone, now) {
+      const parsedStart = milestone.start ? parseDate(milestone.start) : null;
+      const hasExplicitStart = Boolean(parsedStart);
+      const start = parsedStart || new Date(now);
+      const end = milestone.end ? parseDate(milestone.end) : null;
+      return { ...milestone, start, end, hasExplicitStart };
+    }
+
+    function formatRelative(ms) {
+      const abs = Math.abs(ms);
+      const days = Math.floor(abs / MS.day);
+      if (days >= 1) {
+        const hours = Math.floor((abs % MS.day) / MS.hour);
+        return `${days} day${days !== 1 ? 's' : ''}${hours ? ` ${hours} h` : ''}`;
+      }
+      const hours = Math.floor(abs / MS.hour);
+      if (hours >= 1) {
+        const minutes = Math.floor((abs % MS.hour) / MS.minute);
+        return `${hours} h${minutes ? ` ${minutes} min` : ''}`;
+      }
+      const minutes = Math.max(1, Math.round(abs / MS.minute));
+      return `${minutes} min`;
+    }
+
+    function describeCountdown({ start, end, hasExplicitStart }, now) {
+      if (!hasExplicitStart && !end) return 'Invalid date';
+      const effectiveStart = hasExplicitStart ? start : now;
+      const effectiveEnd = end || new Date(effectiveStart.getTime() + MS.day);
+      if (now < effectiveStart) {
+        return `Begins in ${formatRelative(effectiveStart - now)}`;
+      }
+      if (now <= effectiveEnd) {
+        return `Ends in ${formatRelative(effectiveEnd - now)}`;
+      }
+      return `Finished ${formatRelative(now - effectiveEnd)} ago`;
+    }
+
+    function formatWindow({ start, end, hasExplicitStart }) {
+      if (!hasExplicitStart && !end) return 'Date to be confirmed';
+      const localeOpts = { day: '2-digit', month: 'short', year: 'numeric' };
+      if (!hasExplicitStart && end) {
+        return `\u25CF Until ${end.toLocaleString('en-US', localeOpts)}`;
+      }
+      if (!end) {
+        return `\u25CF ${start.toLocaleString('en-US', localeOpts)}`;
+      }
+      const startStr = start.toLocaleString('en-US', localeOpts);
+      const endStr = end.toLocaleString('en-US', localeOpts);
+      if (startStr === endStr) return `\u25CF ${startStr}`;
+      return `\u25CF ${startStr} – ${endStr}`;
+    }
+
+    function classifyMilestone({ start, end, hasExplicitStart }, now) {
+      if (!hasExplicitStart && !end) return 'unknown';
+      const effectiveStart = hasExplicitStart ? start : now;
+      const effectiveEnd = end || new Date(effectiveStart.getTime() + MS.day);
+      if (now < effectiveStart) return 'pending';
+      if (now > effectiveEnd) return 'done';
+      return 'active';
+    }
+
+    function daysRemaining({ start, end, hasExplicitStart }, now) {
+      if (!hasExplicitStart && !end) return 0;
+      const effectiveStart = hasExplicitStart ? start : now;
+      const effectiveEnd = end || new Date(effectiveStart.getTime() + MS.day);
+      if (now >= effectiveEnd) return 0;
+      const remainingMs = effectiveEnd - now;
+      return Math.max(0, Math.ceil(remainingMs / MS.day));
+    }
+
+    function buildTiles(grid, remaining) {
+      grid.innerHTML = '';
+      for (let i = 0; i < TOTAL_TILES; i += 1) {
+        const cell = document.createElement('span');
+        cell.className = 'tile';
+        if (i < remaining) {
+          cell.classList.add('active');
+        } else {
+          cell.classList.add('past');
+        }
+        grid.appendChild(cell);
+      }
+      if (remaining > TOTAL_TILES) {
+        const overlay = document.createElement('span');
+        overlay.className = 'overflow';
+        overlay.textContent = `+${remaining - TOTAL_TILES}`;
+        grid.appendChild(overlay);
+      }
+    }
+
+    function statusLabel(status) {
+      switch (status) {
+        case 'pending': return 'Pending';
+        case 'active': return 'In progress';
+        case 'done': return 'Completed';
+        default: return 'No date';
+      }
+    }
+
+    function render() {
+      const now = new Date();
+      container.innerHTML = '';
+      milestones
+        .map((milestone) => normalizeMilestone(milestone, now))
+        .sort((a, b) => (a.end || a.start) - (b.end || b.start))
+        .forEach((item) => {
+          const node = template.content.firstElementChild.cloneNode(true);
+          const status = classifyMilestone(item, now);
+          node.classList.add(status);
+          const titleLink = node.querySelector('.milestone-title a');
+          titleLink.textContent = item.title;
+          if (item.url) {
+            titleLink.href = item.url;
+            titleLink.target = '_blank';
+          } else {
+            titleLink.href = '#';
+          }
+
+          node.querySelector('.status-label').textContent = statusLabel(status);
+          node.querySelector('.countdown').textContent = describeCountdown(item, now);
+          node.querySelector('.window').textContent = formatWindow(item);
+
+          const remaining = daysRemaining(item, now);
+          node.querySelector('.days-left').textContent = remaining ? `${remaining} day${remaining !== 1 ? 's' : ''} left` : '0 days left';
+
+          buildTiles(node.querySelector('.tile-grid'), remaining);
+
+          const badge = node.querySelector('.category');
+          if (item.category) {
+            badge.hidden = false;
+            badge.textContent = item.category;
+          }
+
+          container.appendChild(node);
+        });
+    }
+
+    render();
+    setInterval(render, MS.minute);
+  </script>
+</body>
+</html>
