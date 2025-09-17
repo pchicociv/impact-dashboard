@@ -1,20 +1,22 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
+
 <head>
   <!--
     FlowingData-style Milestones Radiator
     ------------------------------------
-    1. Edita el arreglo `milestones` dentro del bloque <script> más abajo.
-       Cada objeto acepta:
-         - title (texto obligatorio)
-         - start (fecha u hora en formato ISO: "2024-06-01" o "2024-06-01T09:00")
-         - end (opcional, fecha/hora ISO cuando termina el hito)
-         - category (opcional, etiqueta corta para agrupar o colorear)
-       Guarda el archivo y vuelve a cargar la página para ver los cambios.
+    1. Update the `milestones` array in the <script> block below. Each object accepts:
+         - title (required, shown as the card title)
+         - url (required to make the title clickable)
+         - start (optional ISO date or date-time: "2024-06-01" or "2024-06-01T09:00")
+         - end (optional ISO date or date-time when the milestone finishes)
+         - category (optional short label for grouping; colors are assigned automatically)
+       Omit "start" to default the milestone to "now".
 
-    2. Para incrustarlo en una Wiki de Azure DevOps, abre el archivo en tu navegador,
-       copia todo el HTML (Ctrl+A, Ctrl+C) y pégalo directamente en la página Wiki
-       en modo de edición. Azure DevOps renderizará el HTML incrustado sin pasos extra.
+    2. To embed this radiator inside an Azure DevOps Wiki page, open the file in a
+       browser, copy the full HTML (Ctrl+A, Ctrl+C) and paste it into the Wiki editor.
+       Azure DevOps will render the pasted HTML without extra steps.
+
   -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -94,6 +96,14 @@
       margin: 0;
       color: var(--teal-700);
     }
+    .milestone-title a {
+      color: inherit;
+      text-decoration: none;
+    }
+    .milestone-title a:hover,
+    .milestone-title a:focus {
+      text-decoration: underline;
+    }
     .milestone-meta {
       display: flex;
       flex-wrap: wrap;
@@ -168,19 +178,51 @@
       background: linear-gradient(90deg, var(--teal-300), var(--teal-200));
     }
     time { font-variant-numeric: tabular-nums; }
+    .completed-wrapper {
+      margin-top: 32px;
+      border-top: 1px solid var(--ring);
+      padding-top: 24px;
+    }
+    .toggle-completed {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--ring);
+      background: var(--panel);
+      color: var(--teal-700);
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: var(--shadow-elev);
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .toggle-completed:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 32px rgba(10, 67, 63, .12);
+    }
+    .toggle-completed[aria-expanded="true"] {
+      background: var(--panel-soft);
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>Radiador de hitos</h1>
-    <p class="lead">Controla el pulso de tus proyectos con una vista compacta y actualizada de próximos entregables.</p>
+    <h1>Milestones Radiator</h1>
+    <p class="lead">Track project momentum with a FlowingData-inspired snapshot of upcoming and active delivery dates.</p>
   </header>
   <section class="radiator" id="radiator"></section>
+  <section class="completed-wrapper" id="completed-wrapper" hidden>
+    <button class="toggle-completed" id="toggle-completed" type="button" aria-expanded="false">
+      Show completed milestones
+    </button>
+    <div class="radiator" id="completed-radiator" hidden></div>
+  </section>
 
   <template id="milestone-template">
     <article class="milestone-card">
       <div class="milestone-head">
-        <h2 class="milestone-title"></h2>
+        <h2 class="milestone-title"><a href="#" rel="noopener"></a></h2>
         <div class="milestone-meta">
           <span class="status"><span class="status-dot"></span><span class="status-label"></span></span>
           <span class="badge category" hidden></span>
@@ -196,10 +238,10 @@
 
   <script>
     const milestones = [
-      { title: "Kick-off equipos regionales", start: "2024-05-28T09:00", category: "Lanzamiento" },
-      { title: "Revisión de prototipo", start: "2024-06-10", end: "2024-06-14", category: "Diseño" },
-      { title: "Entrega MVP", start: "2024-07-01", end: "2024-07-05", category: "Producto" },
-      { title: "Formación usuarios clave", start: "2024-07-12", category: "Adopción" }
+      { title: "Regional teams kick-off", url: "https://example.com/kickoff", start: "2024-05-28T09:00", category: "Launch" },
+      { title: "Prototype review", url: "https://example.com/prototype", start: "2024-06-10", end: "2024-06-14", category: "Design" },
+      { title: "MVP delivery", url: "https://example.com/mvp", start: "2024-07-01", end: "2024-07-05", category: "Product" },
+      { title: "Key user training", url: "https://example.com/training", start: "2024-07-12", category: "Adoption" }
     ];
 
     const MS = {
@@ -209,6 +251,9 @@
     };
 
     const radiator = document.getElementById('radiator');
+    const completedRadiator = document.getElementById('completed-radiator');
+    const completedWrapper = document.getElementById('completed-wrapper');
+    const toggleCompleted = document.getElementById('toggle-completed');
     const template = document.getElementById('milestone-template');
 
     function parseDate(value) {
@@ -216,8 +261,8 @@
       return isNaN(parsed.getTime()) ? null : parsed;
     }
 
-    function normalizeMilestone(milestone) {
-      const start = parseDate(milestone.start);
+    function normalizeMilestone(milestone, fallbackStart) {
+      const start = milestone.start ? parseDate(milestone.start) : new Date(fallbackStart);
       const end = milestone.end ? parseDate(milestone.end) : null;
       return { ...milestone, start, end };
     }
@@ -231,13 +276,13 @@
     }
 
     function formatWindow({ start, end }) {
-      if (!start) return 'Fecha por definir';
+      if (!start) return 'Date to be confirmed';
       const localeOpts = { day: '2-digit', month: 'short', year: 'numeric' };
-      const startStr = start.toLocaleString('es-ES', localeOpts);
+      const startStr = start.toLocaleString('en-US', localeOpts);
       if (!end) {
         return `\u25CF ${startStr}`;
       }
-      const endStr = end.toLocaleString('es-ES', localeOpts);
+      const endStr = end.toLocaleString('en-US', localeOpts);
       if (startStr === endStr) {
         return `\u25CF ${startStr}`;
       }
@@ -249,7 +294,7 @@
       const days = Math.floor(abs / MS.day);
       if (days >= 1) {
         const hours = Math.floor((abs % MS.day) / MS.hour);
-        return `${days} día${days !== 1 ? 's' : ''}${hours ? ` y ${hours} h` : ''}`;
+        return `${days} day${days !== 1 ? 's' : ''}${hours ? ` ${hours} h` : ''}`;
       }
       const hours = Math.floor(abs / MS.hour);
       if (hours >= 1) {
@@ -262,15 +307,15 @@
 
     function describeCountdown(milestone, now) {
       const { start, end } = milestone;
-      if (!start) return 'Fecha no válida';
+      if (!start) return 'Invalid date';
       const effectiveEnd = end || new Date(start.getTime() + MS.day);
       if (now < start) {
-        return `Comienza en ${formatRelative(start - now)}`;
+        return `Starts in ${formatRelative(start - now)}`;
       }
       if (now <= effectiveEnd) {
-        return `Restan ${formatRelative(effectiveEnd - now)}`;
+        return `Time remaining ${formatRelative(effectiveEnd - now)}`;
       }
-      return `Finalizó hace ${formatRelative(now - effectiveEnd)}`;
+      return `Finished ${formatRelative(now - effectiveEnd)} ago`;
     }
 
     function progressValue(milestone, now) {
@@ -284,25 +329,72 @@
 
     function statusLabel(status) {
       switch (status) {
-        case 'pending': return 'Pendiente';
-        case 'active': return 'En curso';
-        case 'done': return 'Finalizado';
-        default: return 'Sin fecha';
+        case 'pending': return 'Pending';
+        case 'active': return 'In progress';
+        case 'done': return 'Completed';
+        default: return 'No date';
       }
+    }
+
+    function buildCategoryColors(items) {
+      const palette = [
+        '#33B990',
+        '#2A8C82',
+        '#F3C613',
+        '#0E5F5A',
+        '#9FD3C6',
+        '#2F7770',
+        '#C2E3DD'
+      ];
+      const unique = Array.from(new Set(items.filter(item => item.category).map(item => item.category)));
+      return unique.reduce((acc, category, index) => {
+        acc[category] = palette[index % palette.length];
+        return acc;
+      }, {});
+    }
+
+    function contrastColor(hex) {
+      if (!hex) return '#0F2D2E';
+      const value = hex.replace('#', '');
+      const bigint = parseInt(value, 16);
+      const r = (bigint >> 16) & 255;
+      const g = (bigint >> 8) & 255;
+      const b = bigint & 255;
+      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      return luminance > 0.6 ? '#0F2D2E' : '#FFFFFF';
+    }
+
+    function applyCategoryStyles(badge, category, colors) {
+      const color = colors[category];
+      if (!color) return;
+      badge.style.background = color;
+      badge.style.borderColor = color;
+      badge.style.color = contrastColor(color);
     }
 
     function render() {
       const now = new Date();
       radiator.innerHTML = '';
+      completedRadiator.innerHTML = '';
       const items = milestones
-        .map(normalizeMilestone)
+        .map((milestone) => normalizeMilestone(milestone, now))
         .sort((a, b) => (a.start || 0) - (b.start || 0));
+
+      const categoryColors = buildCategoryColors(items);
 
       items.forEach((item) => {
         const node = template.content.firstElementChild.cloneNode(true);
         const status = classifyMilestone(item, now);
         node.classList.add(status);
-        node.querySelector('.milestone-title').textContent = item.title || 'Sin título';
+        const titleLink = node.querySelector('.milestone-title a');
+        titleLink.textContent = item.title || 'Untitled milestone';
+        if (item.url) {
+          titleLink.href = item.url;
+          titleLink.target = '_blank';
+        } else {
+          titleLink.href = '#';
+          titleLink.removeAttribute('target');
+        }
         node.querySelector('.status-label').textContent = statusLabel(status);
         node.querySelector('.countdown').textContent = describeCountdown(item, now);
         node.querySelector('.window').textContent = formatWindow(item);
@@ -313,15 +405,39 @@
         if (item.category) {
           badge.textContent = item.category;
           badge.hidden = false;
+          applyCategoryStyles(badge, item.category, categoryColors);
         } else {
           badge.hidden = true;
         }
-        radiator.appendChild(node);
+        if (status === 'done') {
+          completedRadiator.appendChild(node);
+        } else {
+          radiator.appendChild(node);
+        }
       });
+
+      const hasCompleted = completedRadiator.childElementCount > 0;
+      completedWrapper.hidden = !hasCompleted;
+      if (!hasCompleted) {
+        toggleCompleted.setAttribute('aria-expanded', 'false');
+        toggleCompleted.textContent = 'Show completed milestones';
+        completedRadiator.hidden = true;
+      } else {
+        const isOpen = completedRadiator.hidden === false;
+        toggleCompleted.setAttribute('aria-expanded', String(isOpen));
+        toggleCompleted.textContent = isOpen ? 'Hide completed milestones' : 'Show completed milestones';
+      }
     }
 
     render();
     setInterval(render, MS.minute);
+
+    toggleCompleted?.addEventListener('click', () => {
+      const isOpen = completedRadiator.hidden === false;
+      completedRadiator.hidden = isOpen;
+      toggleCompleted.setAttribute('aria-expanded', String(!isOpen));
+      toggleCompleted.textContent = isOpen ? 'Show completed milestones' : 'Hide completed milestones';
+    });
   </script>
 </body>
 </html>
