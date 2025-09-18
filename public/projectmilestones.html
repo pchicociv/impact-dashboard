@@ -10,7 +10,7 @@
          - start (optional ISO date or date-time string)
          - end (optional ISO date or date-time string)
          - category (optional label used to group rings)
-       Omit "start" to default the milestone to `ProjectStartDate` (defined below).
+       Omit "start" to default the milestone to the configurable project start date.
     2. Copy the whole HTML file and paste it into an Azure DevOps Wiki page to publish
        the visualization as-is.
   -->
@@ -377,7 +377,9 @@
       }
     ];
 
-    const ProjectStartDate = new Date('2025-07-14T00:00:00');
+    const DEFAULT_PROJECT_START_STRING = '2025-07-14T00:00:00';
+    let projectStartDateString = DEFAULT_PROJECT_START_STRING;
+    let projectStartDate = new Date(projectStartDateString);
 
     const MS = {
       minute: 60 * 1000,
@@ -400,7 +402,7 @@
     function normalizeMilestone(milestone) {
       const parsedStart = milestone.start ? parseDate(milestone.start) : null;
       const hasExplicitStart = Boolean(parsedStart);
-      const start = parsedStart ? new Date(parsedStart) : new Date(ProjectStartDate);
+      const start = parsedStart ? new Date(parsedStart) : new Date(projectStartDate);
       const end = milestone.end ? parseDate(milestone.end) : null;
       return { ...milestone, start, end, hasExplicitStart };
     }
@@ -482,7 +484,7 @@
     function describeCountdown(milestone, now) {
       const { start, end, hasExplicitStart } = milestone;
       if (!hasExplicitStart && !end) return 'Invalid date';
-      const effectiveStart = hasExplicitStart ? start : ProjectStartDate;
+      const effectiveStart = hasExplicitStart ? start : projectStartDate;
       const effectiveEnd = end || new Date(effectiveStart.getTime() + MS.day);
       if (!hasExplicitStart) {
         if (now <= effectiveEnd) {
@@ -513,7 +515,7 @@
     function completionRatio(milestone, now) {
       const { start, end, hasExplicitStart } = milestone;
       if (!hasExplicitStart && !end) return 0;
-      const effectiveStart = hasExplicitStart ? start : ProjectStartDate;
+      const effectiveStart = hasExplicitStart ? start : projectStartDate;
       const effectiveEnd = end || new Date(effectiveStart.getTime() + MS.day);
       if (now <= effectiveStart) return 0;
       if (now >= effectiveEnd) return 1;
@@ -532,7 +534,7 @@
     }
 
     function getEffectiveStart(milestone) {
-      return milestone.hasExplicitStart ? milestone.start : new Date(ProjectStartDate);
+      return milestone.hasExplicitStart ? milestone.start : new Date(projectStartDate);
     }
 
     function getEffectiveEnd(milestone) {
@@ -546,6 +548,24 @@
       if (refreshEditor) {
         renderEditor();
       }
+    }
+
+    function updateProjectStartDate(value) {
+      const trimmed = value.trim();
+      if (!trimmed) {
+        projectStartDateString = DEFAULT_PROJECT_START_STRING;
+        projectStartDate = new Date(projectStartDateString);
+        render();
+        return projectStartDateString;
+      }
+      const parsed = parseDate(trimmed);
+      if (!parsed) {
+        return;
+      }
+      projectStartDateString = trimmed;
+      projectStartDate = new Date(parsed);
+      render();
+      return trimmed;
     }
 
     function updateMilestone(index, field, value) {
@@ -596,6 +616,27 @@
     function renderEditor() {
       if (!editorList) return;
       editorList.innerHTML = '';
+      const defaultsCard = document.createElement('article');
+      defaultsCard.className = 'editor-milestone';
+
+      const defaultsRow = document.createElement('div');
+      defaultsRow.className = 'editor-row';
+      defaultsRow.appendChild(createField({
+        label: 'Default project start',
+        value: projectStartDateString,
+        placeholder: 'YYYY-MM-DD or YYYY-MM-DDTHH:mm',
+        id: 'project-start-date',
+        onInput: (val) => updateProjectStartDate(val)
+      }));
+      defaultsCard.appendChild(defaultsRow);
+
+      const defaultsNote = document.createElement('p');
+      defaultsNote.className = 'editor-help';
+      defaultsNote.textContent = 'Milestones without a start date will fall back to this value.';
+      defaultsCard.appendChild(defaultsNote);
+
+      editorList.appendChild(defaultsCard);
+
       if (!milestones.length) {
         const empty = document.createElement('p');
         empty.className = 'editor-empty';
