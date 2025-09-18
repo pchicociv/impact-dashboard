@@ -120,29 +120,6 @@
       height: auto;
       display: block;
     }
-    .chart-center {
-      position: absolute;
-      display: grid;
-      place-items: center;
-      text-align: center;
-      gap: 4px;
-      width: clamp(120px, 42%, 150px);
-      height: clamp(120px, 42%, 150px);
-      border-radius: 50%;
-      background: rgba(255,255,255,0.92);
-      box-shadow: 0 6px 16px rgba(15,45,46,.12);
-    }
-    .chart-center .percent {
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--aggregate-color, var(--teal-700));
-    }
-    .chart-center .label {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: var(--muted);
-    }
     .overall-window,
     .overall-countdown {
       font-size: 13px;
@@ -524,18 +501,6 @@
         const chartShell = document.createElement('div');
         chartShell.className = 'chart-shell';
         chartShell.appendChild(svg);
-        const center = document.createElement('div');
-        center.className = 'chart-center';
-        center.style.setProperty('--aggregate-color', aggregateColor);
-        const percent = document.createElement('span');
-        percent.className = 'percent';
-        percent.textContent = `${Math.round(aggregateRatio * 100)}%`;
-        const label = document.createElement('span');
-        label.className = 'label';
-        label.textContent = 'Time consumed';
-        center.appendChild(percent);
-        center.appendChild(label);
-        chartShell.appendChild(center);
         ringsPanel.appendChild(chartShell);
 
         const overallWindow = document.createElement('div');
@@ -548,7 +513,7 @@
         ringsPanel.appendChild(overallCountdown);
         const overallLegend = document.createElement('div');
         overallLegend.className = 'overall-legend';
-        overallLegend.textContent = 'Overall time consumed';
+        overallLegend.textContent = 'Overall ring & slider cover all milestones below';
         overallLegend.style.setProperty('--aggregate-color', aggregateColor);
         ringsPanel.appendChild(overallLegend);
 
@@ -556,6 +521,51 @@
 
         const list = document.createElement('ul');
         list.className = 'milestone-list';
+        const overallItem = document.createElement('li');
+        overallItem.className = 'milestone-item overall-item';
+
+        const overallSwatch = document.createElement('span');
+        overallSwatch.className = 'swatch';
+        overallSwatch.style.setProperty('--swatch', aggregateColor);
+        overallItem.appendChild(overallSwatch);
+
+        const overallText = document.createElement('div');
+        overallText.className = 'legend-text';
+
+        const overallTitle = document.createElement('span');
+        overallTitle.className = 'legend-title';
+        const milestoneNames = groupItems.map(item => item.title).join(', ');
+        overallTitle.textContent = `Overall (${milestoneNames})`;
+        overallText.appendChild(overallTitle);
+
+        const overallWindowLine = document.createElement('span');
+        overallWindowLine.className = 'legend-window';
+        overallWindowLine.textContent = formatOverallWindow(aggregateStart, aggregateEnd);
+        overallText.appendChild(overallWindowLine);
+
+        const overallCountdownLine = document.createElement('span');
+        overallCountdownLine.className = 'legend-countdown';
+        overallCountdownLine.textContent = describeRange(aggregateStart, aggregateEnd, now);
+        overallText.appendChild(overallCountdownLine);
+
+        overallItem.appendChild(overallText);
+
+        const overallPercentLabel = document.createElement('span');
+        overallPercentLabel.className = 'legend-percent';
+        overallPercentLabel.style.setProperty('color', aggregateColor);
+        overallPercentLabel.textContent = `${Math.round(aggregateRatio * 100)}%`;
+        overallItem.appendChild(overallPercentLabel);
+
+        const overallProgress = document.createElement('div');
+        overallProgress.className = 'progress-bar';
+        overallProgress.setAttribute('aria-label', `${Math.round(aggregateRatio * 100)}% of the category window consumed`);
+        const overallProgressFill = document.createElement('span');
+        overallProgressFill.style.setProperty('--w', `${(aggregateRatio * 100).toFixed(1)}%`);
+        overallProgressFill.style.setProperty('--slider-color', aggregateColor);
+        overallProgress.appendChild(overallProgressFill);
+        overallItem.appendChild(overallProgress);
+
+        list.appendChild(overallItem);
         groupItems.forEach((item, index) => {
           const li = document.createElement('li');
           li.className = 'milestone-item';
