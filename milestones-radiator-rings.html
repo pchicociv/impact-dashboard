@@ -385,24 +385,20 @@
       if (!hasExplicitStart && !end) return 0;
       const effectiveStart = hasExplicitStart ? start : ProjectStartDate;
       const effectiveEnd = end || new Date(effectiveStart.getTime() + MS.day);
-      if (now >= effectiveEnd) return 0;
+      if (now <= effectiveStart) return 0;
+      if (now >= effectiveEnd) return 1;
       const total = Math.max(effectiveEnd - effectiveStart, MS.minute);
-      if (now <= effectiveStart) {
-        return 1;
-      }
-      const remaining = Math.max(0, Math.min(total, effectiveEnd - now));
-      return Math.min(1, remaining / total);
+      const elapsed = Math.max(0, Math.min(total, now - effectiveStart));
+      return Math.min(1, elapsed / total);
     }
 
     function completionForRange(start, end, now) {
       if (!start || !end) return 0;
-      if (now >= end) return 0;
+      if (now <= start) return 0;
+      if (now >= end) return 1;
       const total = Math.max(end - start, MS.minute);
-      if (now <= start) {
-        return 1;
-      }
-      const remaining = Math.max(0, Math.min(total, end - now));
-      return Math.min(1, remaining / total);
+      const elapsed = Math.max(0, Math.min(total, now - start));
+      return Math.min(1, elapsed / total);
     }
 
     function getEffectiveStart(milestone) {
@@ -536,7 +532,7 @@
         percent.textContent = `${Math.round(aggregateRatio * 100)}%`;
         const label = document.createElement('span');
         label.className = 'label';
-        label.textContent = 'Overall';
+        label.textContent = 'Time consumed';
         center.appendChild(percent);
         center.appendChild(label);
         chartShell.appendChild(center);
@@ -552,7 +548,7 @@
         ringsPanel.appendChild(overallCountdown);
         const overallLegend = document.createElement('div');
         overallLegend.className = 'overall-legend';
-        overallLegend.textContent = 'Overall time remaining';
+        overallLegend.textContent = 'Overall time consumed';
         overallLegend.style.setProperty('--aggregate-color', aggregateColor);
         ringsPanel.appendChild(overallLegend);
 
@@ -611,7 +607,7 @@
           progressFill.style.setProperty('--w', `${(ratio * 100).toFixed(1)}%`);
           progressFill.style.setProperty('--slider-color', ringColors[index % ringColors.length]);
           progress.appendChild(progressFill);
-          progress.setAttribute('aria-label', `${Math.round(ratio * 100)}% of the window remaining`);
+          progress.setAttribute('aria-label', `${Math.round(ratio * 100)}% of the window consumed`);
           li.appendChild(progress);
 
           list.appendChild(li);
