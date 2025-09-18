@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!--
+    FlowingData-style Milestones Radiator (Concentric Rings Edition)
+    ----------------------------------------------------------------
+    1. Edit the `milestones` array in the <script> block below. Each object accepts:
+         - title (required, shown in the legend and tooltips)
+         - url (optional link with more context)
+         - start (optional ISO date or date-time string)
+         - end (optional ISO date or date-time string)
+         - category (optional label used to group rings)
+       Omit "start" to default the milestone to `ProjectStartDate` (defined below).
+    2. Copy the whole HTML file and paste it into an Azure DevOps Wiki page to publish
+       the visualization as-is.
+  -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Milestones Concentric Rings</title>
+  <style>
+    :root {
+      --teal-100:#EAF6F4;
+      --teal-150:#D7ECE8;
+      --teal-200:#C2E3DD;
+      --teal-300:#9FD3C6;
+      --teal-600:#2A8C82;
+      --teal-700:#18786F;
+      --green-500:#33B990;
+      --gold-500:#F3C613;
+      --bg:#EAF6F4;
+      --panel:#FFFFFF;
+      --panel-soft:#F6FBFA;
+      --ink:#0F2D2E;
+      --muted:#5D7A7F;
+      --ring:#CFE0DC;
+      --shadow-elev:0 1px 2px rgba(6,44,40,.06),0 12px 28px rgba(6,44,40,.08);
+      --accent:#33B990;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans";
+      background: var(--bg);
+      color: var(--ink);
+      padding: 32px 24px 64px;
+    }
+    h1 {
+      font-size: 28px;
+      margin: 0 0 4px;
+      color: var(--teal-700);
+    }
+    p.lead { margin: 0 0 24px; color: var(--muted); }
+    .categories-grid {
+      display: grid;
+      gap: 24px;
+    }
+    @media (min-width: 960px) {
+      .categories-grid {
+        grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+      }
+    }
+    .category-card {
+      background: var(--card-bg, var(--panel));
+      border-radius: 18px;
+      border: 1px solid rgba(15,45,46,0.08);
+      padding: 28px;
+      display: grid;
+      gap: 24px;
+      box-shadow: var(--shadow-elev);
+    }
+    .category-head {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+    }
+    .category-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--teal-700);
+      margin: 0;
+    }
+    .badge {
+      padding: 4px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--ring);
+      background: var(--panel-soft);
+      font-size: 11px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .category-body {
+      display: grid;
+      gap: 24px;
+    }
+    @media (min-width: 960px) {
+      .category-body {
+        grid-template-columns: minmax(240px, 0.9fr) minmax(260px, 1.1fr);
+        align-items: start;
+      }
+    }
+    .rings-panel {
+      display: grid;
+      gap: 14px;
+      justify-items: center;
+      width: 100%;
+    }
+    .chart-shell {
+      position: relative;
+      width: min(280px, 100%);
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+    }
+    .rings-chart {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .overall-window,
+    .overall-countdown {
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+    }
+    .overall-countdown {
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .milestone-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 18px;
+    }
+    .milestone-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      column-gap: 12px;
+      row-gap: 8px;
+      align-items: center;
+    }
+    .progress-bar {
+      position: relative;
+      grid-column: 1 / span 3;
+      height: 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(15,45,46,0.08);
+      background: rgba(255,255,255,0.55);
+      overflow: hidden;
+    }
+    .progress-bar span {
+      position: absolute;
+      inset: 0;
+      width: var(--w, 0%);
+      border-radius: inherit;
+      background: var(--slider-color, linear-gradient(90deg, rgba(15,122,108,0.9), rgba(244,157,55,0.9)));
+      transition: width .6s cubic-bezier(.22,.61,.36,1);
+    }
+    .swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      background: var(--swatch);
+      box-shadow: inset 0 0 0 1px rgba(15,45,46,.18);
+    }
+    .legend-text {
+      display: grid;
+      gap: 2px;
+    }
+    .legend-title {
+      font-weight: 600;
+      color: var(--teal-700);
+    }
+    .legend-title a {
+      color: inherit;
+      text-decoration: none;
+    }
+    .legend-title a:hover,
+    .legend-title a:focus {
+      text-decoration: underline;
+    }
+    .legend-window {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .legend-countdown {
+      font-size: 12px;
+      color: var(--ink);
+      font-weight: 600;
+    }
+    .legend-percent {
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      color: var(--teal-600);
+      justify-self: end;
+    }
+    time { font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Milestones Concentric Rings</h1>
+    <p class="lead">Visualiza cada categoría como anillos concéntricos que muestran cuánto tiempo se ha consumido hasta su próxima fecha clave.</p>
+  </header>
+  <section class="categories-grid" id="categories"></section>
+
+  <script>
+    const milestones = [
+      { title: "MVP 1", url: "https://example.com/kickoff", end: "2025-10-17", category: "MVP" },
+      { title: "MVP 2", url: "https://example.com/prototype", end: "2025-11-14", category: "MVP" },
+      { title: "Release Sprint", url: "https://example.com/mvp", start: "2025-11-17", end: "2025-11-28", category: "Release" },
+      { title: "Pillar 2 Rating CR", url: "https://example.com/training", end: "2025-12-05", category: "CR" }
+    ];
+
+    const ProjectStartDate = new Date('2025-07-14T00:00:00');
+
+    const MS = {
+      minute: 60 * 1000,
+      hour: 60 * 60 * 1000,
+      day: 24 * 60 * 60 * 1000
+    };
+
+    const categoriesContainer = document.getElementById('categories');
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+
+    function parseDate(value) {
+      const parsed = value instanceof Date ? value : new Date(value);
+      return isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    function normalizeMilestone(milestone) {
+      const parsedStart = milestone.start ? parseDate(milestone.start) : null;
+      const hasExplicitStart = Boolean(parsedStart);
+      const start = parsedStart ? new Date(parsedStart) : new Date(ProjectStartDate);
+      const end = milestone.end ? parseDate(milestone.end) : null;
+      return { ...milestone, start, end, hasExplicitStart };
+    }
+
+    const ringPalette = [
+      '#1E88E5',
+      '#FB8C00',
+      '#8E24AA',
+      '#43A047',
+      '#F4511E',
+      '#00ACC1'
+    ];
+
+    const pastelPalette = [
+      '#F2FBF8',
+      '#FFF6ED',
+      '#F4F3FF',
+      '#FFF5F8',
+      '#EEF5FF',
+      '#F9F7FF'
+    ];
+
+    function buildCategoryBackgrounds(items) {
+      const unique = Array.from(new Set(items.map(item => item.category || 'Uncategorized')));
+      return unique.reduce((acc, category, index) => {
+        acc[category] = pastelPalette[index % pastelPalette.length];
+        return acc;
+      }, {});
+    }
+
+    function formatRelative(ms) {
+      const abs = Math.abs(ms);
+      const days = Math.floor(abs / MS.day);
+      if (days >= 1) {
+        return `${days} day${days !== 1 ? 's' : ''}`;
+      }
+      const hours = Math.floor(abs / MS.hour);
+      if (hours >= 1) {
+        const minutes = Math.floor((abs % MS.hour) / MS.minute);
+        return `${hours} h${minutes ? ` ${minutes} min` : ''}`;
+      }
+      const minutes = Math.max(1, Math.round(abs / MS.minute));
+      return `${minutes} min`;
+    }
+
+    function formatWindow({ start, end, hasExplicitStart }) {
+      if (!hasExplicitStart && !end) return 'Date to be confirmed';
+      const localeOpts = { day: '2-digit', month: 'short', year: 'numeric' };
+      if (!hasExplicitStart && end) {
+        const endStr = end.toLocaleString('en-US', localeOpts);
+        return `\u25CF Until ${endStr}`;
+      }
+      const startStr = start.toLocaleString('en-US', localeOpts);
+      if (!end) {
+        return `\u25CF ${startStr}`;
+      }
+      const endStr = end.toLocaleString('en-US', localeOpts);
+      if (startStr === endStr) {
+        return `\u25CF ${startStr}`;
+      }
+      return `\u25CF ${startStr} – ${endStr}`;
+    }
+
+    function formatOverallWindow(start, end) {
+      const localeOpts = { day: '2-digit', month: 'short', year: 'numeric' };
+      const startStr = start.toLocaleString('en-US', localeOpts);
+      const endStr = end.toLocaleString('en-US', localeOpts);
+      if (startStr === endStr) {
+        return `\u25CF ${startStr}`;
+      }
+      return `\u25CF ${startStr} – ${endStr}`;
+    }
+
+    function describeCountdown(milestone, now) {
+      const { start, end, hasExplicitStart } = milestone;
+      if (!hasExplicitStart && !end) return 'Invalid date';
+      const effectiveStart = hasExplicitStart ? start : ProjectStartDate;
+      const effectiveEnd = end || new Date(effectiveStart.getTime() + MS.day);
+      if (!hasExplicitStart) {
+        if (now <= effectiveEnd) {
+          return `Ends in ${formatRelative(effectiveEnd - now)}`;
+        }
+        return `Finished ${formatRelative(now - effectiveEnd)} ago`;
+      }
+      if (now < effectiveStart) {
+        return `Begins in ${formatRelative(effectiveStart - now)}`;
+      }
+      if (now <= effectiveEnd) {
+        return `Ends in ${formatRelative(effectiveEnd - now)}`;
+      }
+      return `Finished ${formatRelative(now - effectiveEnd)} ago`;
+    }
+
+    function describeRange(start, end, now) {
+      if (!start || !end) return 'Date to be confirmed';
+      if (now < start) {
+        return `Begins in ${formatRelative(start - now)}`;
+      }
+      if (now <= end) {
+        return `Ends in ${formatRelative(end - now)}`;
+      }
+      return `Finished ${formatRelative(now - end)} ago`;
+    }
+
+    function completionRatio(milestone, now) {
+      const { start, end, hasExplicitStart } = milestone;
+      if (!hasExplicitStart && !end) return 0;
+      const effectiveStart = hasExplicitStart ? start : ProjectStartDate;
+      const effectiveEnd = end || new Date(effectiveStart.getTime() + MS.day);
+      if (now <= effectiveStart) return 0;
+      if (now >= effectiveEnd) return 1;
+      const total = Math.max(effectiveEnd - effectiveStart, MS.minute);
+      const elapsed = Math.max(0, Math.min(total, now - effectiveStart));
+      return Math.min(1, elapsed / total);
+    }
+
+    function completionForRange(start, end, now) {
+      if (!start || !end) return 0;
+      if (now <= start) return 0;
+      if (now >= end) return 1;
+      const total = Math.max(end - start, MS.minute);
+      const elapsed = Math.max(0, Math.min(total, now - start));
+      return Math.min(1, elapsed / total);
+    }
+
+    function getEffectiveStart(milestone) {
+      return milestone.hasExplicitStart ? milestone.start : new Date(ProjectStartDate);
+    }
+
+    function getEffectiveEnd(milestone) {
+      const start = getEffectiveStart(milestone);
+      return milestone.end ? milestone.end : new Date(start.getTime() + MS.day);
+    }
+
+    function buildRingsChart(items, now) {
+      const radiusBase = 56;
+      const ringSpacing = 26;
+      const strokeWidth = 18;
+      const size = 320;
+      const center = size / 2;
+
+      const svg = document.createElementNS(SVG_NS, 'svg');
+      svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+      svg.setAttribute('class', 'rings-chart');
+
+      const ranges = items.map((item) => ({
+        start: getEffectiveStart(item),
+        end: getEffectiveEnd(item)
+      }));
+
+      const showAggregate = items.length > 1;
+      const aggregateStart = showAggregate
+        ? new Date(Math.min(...ranges.map(range => range.start.getTime())))
+        : null;
+      const aggregateEnd = showAggregate
+        ? new Date(Math.max(...ranges.map(range => range.end.getTime())))
+        : null;
+      const aggregateRatio = showAggregate && aggregateStart && aggregateEnd
+        ? completionForRange(aggregateStart, aggregateEnd, now)
+        : null;
+
+      const ringColors = items.map((_, index) => ringPalette[index % ringPalette.length]);
+      const aggregateColor = '#F9C80E';
+
+      function createCircle({ radius, stroke, ratio = null, opacity = 1 }) {
+        const circle = document.createElementNS(SVG_NS, 'circle');
+        circle.setAttribute('cx', center);
+        circle.setAttribute('cy', center);
+        circle.setAttribute('r', radius);
+        circle.setAttribute('fill', 'none');
+        circle.setAttribute('stroke', stroke);
+        circle.setAttribute('stroke-width', strokeWidth);
+        circle.setAttribute('stroke-linecap', 'round');
+        circle.setAttribute('opacity', opacity);
+        circle.setAttribute('transform', `rotate(-90 ${center} ${center})`);
+        if (ratio !== null) {
+          const circumference = 2 * Math.PI * radius;
+          circle.setAttribute('stroke-dasharray', circumference.toFixed(3));
+          circle.setAttribute('stroke-dashoffset', ((1 - ratio) * circumference).toFixed(3));
+        }
+        return circle;
+      }
+
+      items.forEach((item, index) => {
+        const radius = radiusBase + index * ringSpacing;
+        svg.appendChild(createCircle({ radius, stroke: 'rgba(207, 224, 220, 0.6)', opacity: 1 }));
+        const ratio = completionRatio(item, now);
+        svg.appendChild(createCircle({ radius, stroke: ringColors[index], ratio }));
+      });
+
+      if (showAggregate) {
+        const aggregateRadius = radiusBase + items.length * ringSpacing;
+        svg.appendChild(createCircle({ radius: aggregateRadius, stroke: 'rgba(207, 224, 220, 0.6)', opacity: 1 }));
+        svg.appendChild(createCircle({ radius: aggregateRadius, stroke: aggregateColor, ratio: aggregateRatio }));
+      }
+
+      return {
+        svg,
+        aggregate: showAggregate ? {
+          ratio: aggregateRatio,
+          start: aggregateStart,
+          end: aggregateEnd,
+          color: aggregateColor
+        } : null,
+        ringColors
+      };
+    }
+
+    function groupByCategory(items) {
+      const map = new Map();
+      items.forEach((item) => {
+        const key = item.category || 'Uncategorized';
+        if (!map.has(key)) {
+          map.set(key, []);
+        }
+        map.get(key).push(item);
+      });
+      return Array.from(map.entries()).map(([category, list]) => ({
+        category,
+        milestones: list.sort((a, b) => (getEffectiveEnd(a) - getEffectiveEnd(b)))
+      }));
+    }
+
+    function render() {
+      const now = new Date();
+      categoriesContainer.innerHTML = '';
+      const normalized = milestones.map(normalizeMilestone);
+      if (!normalized.length) {
+        categoriesContainer.innerHTML = '<p>No milestones configured.</p>';
+        return;
+      }
+      const categoryBackgrounds = buildCategoryBackgrounds(normalized);
+
+      groupByCategory(normalized).forEach(({ category, milestones: groupItems }) => {
+        const card = document.createElement('article');
+        card.className = 'category-card';
+        card.style.setProperty('--card-bg', categoryBackgrounds[category] || 'var(--panel)');
+
+        const head = document.createElement('div');
+        head.className = 'category-head';
+        const title = document.createElement('h2');
+        title.className = 'category-title';
+        title.textContent = category;
+        const badge = document.createElement('span');
+        badge.className = 'badge';
+        badge.textContent = `${groupItems.length} milestone${groupItems.length !== 1 ? 's' : ''}`;
+        head.appendChild(title);
+        head.appendChild(badge);
+        card.appendChild(head);
+
+        const body = document.createElement('div');
+        body.className = 'category-body';
+
+        const ringsPanel = document.createElement('div');
+        ringsPanel.className = 'rings-panel';
+        const { svg, aggregate, ringColors } = buildRingsChart(groupItems, now);
+        const chartShell = document.createElement('div');
+        chartShell.className = 'chart-shell';
+        chartShell.appendChild(svg);
+        ringsPanel.appendChild(chartShell);
+
+        if (aggregate) {
+          const overallWindow = document.createElement('div');
+          overallWindow.className = 'overall-window';
+          overallWindow.textContent = formatOverallWindow(aggregate.start, aggregate.end);
+          ringsPanel.appendChild(overallWindow);
+          const overallCountdown = document.createElement('div');
+          overallCountdown.className = 'overall-countdown';
+          overallCountdown.textContent = describeRange(aggregate.start, aggregate.end, now);
+          ringsPanel.appendChild(overallCountdown);
+        }
+
+        body.appendChild(ringsPanel);
+
+        const list = document.createElement('ul');
+        list.className = 'milestone-list';
+        if (aggregate) {
+          const overallItem = document.createElement('li');
+          overallItem.className = 'milestone-item overall-item';
+
+          const overallSwatch = document.createElement('span');
+          overallSwatch.className = 'swatch';
+          overallSwatch.style.setProperty('--swatch', aggregate.color);
+          overallItem.appendChild(overallSwatch);
+
+          const overallText = document.createElement('div');
+          overallText.className = 'legend-text';
+
+          const overallTitle = document.createElement('span');
+          overallTitle.className = 'legend-title';
+          const milestoneNames = groupItems.map(item => item.title).join(', ');
+          overallTitle.textContent = `Overall (${milestoneNames})`;
+          overallText.appendChild(overallTitle);
+
+          const overallWindowLine = document.createElement('span');
+          overallWindowLine.className = 'legend-window';
+          overallWindowLine.textContent = formatOverallWindow(aggregate.start, aggregate.end);
+          overallText.appendChild(overallWindowLine);
+
+          const overallCountdownLine = document.createElement('span');
+          overallCountdownLine.className = 'legend-countdown';
+          overallCountdownLine.textContent = describeRange(aggregate.start, aggregate.end, now);
+          overallText.appendChild(overallCountdownLine);
+
+          overallItem.appendChild(overallText);
+
+          const overallPercentLabel = document.createElement('span');
+          overallPercentLabel.className = 'legend-percent';
+          overallPercentLabel.style.setProperty('color', aggregate.color);
+          overallPercentLabel.textContent = `${Math.round(aggregate.ratio * 100)}%`;
+          overallItem.appendChild(overallPercentLabel);
+
+          const overallProgress = document.createElement('div');
+          overallProgress.className = 'progress-bar';
+          overallProgress.setAttribute('aria-label', `${Math.round(aggregate.ratio * 100)}% of the category window consumed`);
+          const overallProgressFill = document.createElement('span');
+          overallProgressFill.style.setProperty('--w', `${(aggregate.ratio * 100).toFixed(1)}%`);
+          overallProgressFill.style.setProperty('--slider-color', aggregate.color);
+          overallProgress.appendChild(overallProgressFill);
+          overallItem.appendChild(overallProgress);
+
+          list.appendChild(overallItem);
+        }
+        groupItems.forEach((item, index) => {
+          const li = document.createElement('li');
+          li.className = 'milestone-item';
+
+          const swatch = document.createElement('span');
+          swatch.className = 'swatch';
+          swatch.style.setProperty('--swatch', ringColors[index]);
+          li.appendChild(swatch);
+
+          const legendText = document.createElement('div');
+          legendText.className = 'legend-text';
+
+          const titleLine = document.createElement('span');
+          titleLine.className = 'legend-title';
+          if (item.url) {
+            const link = document.createElement('a');
+            link.href = item.url;
+            link.textContent = item.title;
+            link.target = '_blank';
+            link.rel = 'noopener';
+            titleLine.appendChild(link);
+          } else {
+            titleLine.textContent = item.title;
+          }
+          legendText.appendChild(titleLine);
+
+          const windowLine = document.createElement('span');
+          windowLine.className = 'legend-window';
+          windowLine.textContent = formatWindow(item);
+          legendText.appendChild(windowLine);
+
+          const countdownLine = document.createElement('span');
+          countdownLine.className = 'legend-countdown';
+          countdownLine.textContent = describeCountdown(item, now);
+          legendText.appendChild(countdownLine);
+
+          li.appendChild(legendText);
+
+          const percentLabel = document.createElement('span');
+          percentLabel.className = 'legend-percent';
+          percentLabel.style.setProperty('color', ringColors[index]);
+          const ratio = completionRatio(item, now);
+          percentLabel.textContent = `${Math.round(ratio * 100)}%`;
+          li.appendChild(percentLabel);
+
+          const progress = document.createElement('div');
+          progress.className = 'progress-bar';
+          const progressFill = document.createElement('span');
+          progressFill.style.setProperty('--w', `${(ratio * 100).toFixed(1)}%`);
+          progressFill.style.setProperty('--slider-color', ringColors[index % ringColors.length]);
+          progress.appendChild(progressFill);
+          progress.setAttribute('aria-label', `${Math.round(ratio * 100)}% of the window consumed`);
+          li.appendChild(progress);
+
+          list.appendChild(li);
+        });
+
+        body.appendChild(list);
+        card.appendChild(body);
+        categoriesContainer.appendChild(card);
+      });
+    }
+
+    render();
+    setInterval(render, MS.minute);
+  </script>
+</body>
+</html>

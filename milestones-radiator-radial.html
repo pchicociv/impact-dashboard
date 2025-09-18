@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!--
+    FlowingData-style Milestones Radiator (Radial Countdown Edition)
+    ----------------------------------------------------------------
+    1. Update the `milestones` array in the <script> block below. Each object accepts:
+         - title (required, shown as the card title)
+         - url (optional link for more context)
+         - start (optional ISO date or date-time)
+         - end (optional ISO date or date-time)
+         - category (optional label for grouping)
+       Omit "start" to fall back to `ProjectStartDate` (defined below).
+    2. Copy the whole HTML and paste it into an Azure DevOps Wiki page to publish the radiator.
+  -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Milestones Radial Countdown</title>
+  <style>
+    :root {
+      --teal-100:#EAF6F4;
+      --teal-150:#D7ECE8;
+      --teal-200:#C2E3DD;
+      --teal-300:#9FD3C6;
+      --teal-600:#2A8C82;
+      --teal-700:#18786F;
+      --green-500:#33B990;
+      --gold-500:#F3C613;
+      --bg:#EAF6F4;
+      --panel:#FFFFFF;
+      --panel-soft:#F6FBFA;
+      --ink:#0F2D2E;
+      --muted:#5D7A7F;
+      --ring:#CFE0DC;
+      --shadow-elev:0 1px 2px rgba(6,44,40,.06),0 10px 24px rgba(6,44,40,.06);
+      --accent:#33B990;
+      --accent-2:#2A8C82;
+      --accent-3:#F3C613;
+      --accent-4:#0E5F5A;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans";
+      background: var(--bg);
+      color: var(--ink);
+      padding: 32px 24px 64px;
+    }
+    h1 {
+      font-size: 28px;
+      margin: 0 0 4px;
+      color: var(--teal-700);
+    }
+    p.lead { margin: 0 0 24px; color: var(--muted); }
+    .radiator {
+      display: grid;
+      gap: 20px;
+    }
+    @media (min-width: 720px) {
+      .radiator {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+    }
+    .milestone-card {
+      background: var(--panel);
+      border-radius: 16px;
+      border: 1px solid var(--ring);
+      padding: 24px;
+      box-shadow: var(--shadow-elev);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .milestone-card:hover { transform: translateY(-2px); box-shadow: 0 18px 32px rgba(10,67,63,.12); }
+    .milestone-title { font-size: 18px; font-weight: 600; margin: 0; color: var(--teal-700); }
+    .milestone-title a { color: inherit; text-decoration: none; }
+    .milestone-title a:hover { text-decoration: underline; }
+    .meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+    .badge {
+      padding: 2px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--ring);
+      background: var(--panel-soft);
+      text-transform: uppercase;
+      letter-spacing: .02em;
+      font-weight: 600;
+      font-size: 11px;
+    }
+    .radial-wrapper {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 20px;
+      align-items: center;
+    }
+    .radial-meter {
+      position: relative;
+      width: 140px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at center, var(--panel) 58%, transparent 59%),
+        conic-gradient(var(--accent) calc(var(--p, 0) * 1%), var(--panel-soft) 0);
+      border: 1px solid var(--ring);
+      box-shadow: inset 0 1px 2px rgba(15,45,46,.08);
+    }
+    .radial-meter::after {
+      content: attr(data-label);
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--teal-700);
+    }
+    .countdown { font-size: 15px; font-weight: 600; color: var(--ink); }
+    .window { font-size: 13px; color: var(--muted); }
+    .status { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 12px; letter-spacing: .02em; }
+    .status-dot { width: 8px; height: 8px; border-radius: 999px; background: currentColor; }
+    .milestone-card.pending .radial-meter { --accent: var(--accent-3); }
+    .milestone-card.active .radial-meter { --accent: var(--accent); }
+    .milestone-card.done .radial-meter { --accent: var(--teal-300); }
+    .milestone-card.done .countdown { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Milestones Radial Countdown</h1>
+    <p class="lead">A circular snapshot of how much tiempo queda hasta que acabe cada entrega clave.</p>
+  </header>
+  <section class="radiator" id="radiator"></section>
+
+  <template id="milestone-template">
+    <article class="milestone-card">
+      <div>
+        <h2 class="milestone-title"><a href="#" rel="noopener"></a></h2>
+        <div class="meta">
+          <span class="status"><span class="status-dot"></span><span class="status-label"></span></span>
+          <span class="badge category" hidden></span>
+        </div>
+      </div>
+      <div class="radial-wrapper">
+        <div class="radial-meter" data-label="00%"></div>
+        <div class="details">
+          <div class="countdown"></div>
+          <div class="window"></div>
+        </div>
+      </div>
+    </article>
+  </template>
+
+  <script>
+    const milestones = [
+      { title: "MVP 1", url: "https://example.com/kickoff", end: "2025-10-17", category: "MVP" },
+      { title: "MVP 2", url: "https://example.com/prototype", end: "2025-11-14", category: "MVP" },
+      { title: "Release Sprint", url: "https://example.com/mvp", start: "2025-11-17", end: "2025-11-28", category: "Release" },
+      { title: "Pillar 2 Rating CR", url: "https://example.com/training", end: "2025-12-05", category: "CR" }
+    ];
+
+    const ProjectStartDate = new Date('2025-07-14T00:00:00');
+
+    const MS = {
+      minute: 60 * 1000,
+      hour: 60 * 60 * 1000,
+      day: 24 * 60 * 60 * 1000
+    };
+
+    const template = document.getElementById('milestone-template');
+    const container = document.getElementById('radiator');
+
+    function parseDate(value) {
+      const parsed = value instanceof Date ? value : new Date(value);
+      return isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    function normalizeMilestone(milestone) {
+      const parsedStart = milestone.start ? parseDate(milestone.start) : null;
+      const hasExplicitStart = Boolean(parsedStart);
+      const start = parsedStart ? new Date(parsedStart) : new Date(ProjectStartDate);
+      const end = milestone.end ? parseDate(milestone.end) : null;
+      return { ...milestone, start, end, hasExplicitStart };
+    }
+
+    function formatRelative(ms) {
+      const abs = Math.abs(ms);
+      const days = Math.floor(abs / MS.day);
+      if (days >= 1) {
+        const hours = Math.floor((abs % MS.day) / MS.hour);
+        return `${days} day${days !== 1 ? 's' : ''}${hours ? ` ${hours} h` : ''}`;
+      }
+      const hours = Math.floor(abs / MS.hour);
+      if (hours >= 1) {
+        const minutes = Math.floor((abs % MS.hour) / MS.minute);
+        return `${hours} h${minutes ? ` ${minutes} min` : ''}`;
+      }
+      const minutes = Math.max(1, Math.round(abs / MS.minute));
+      return `${minutes} min`;
+    }
+
+    function describeCountdown({ start, end, hasExplicitStart }, now) {
+      if (!hasExplicitStart && !end) return 'Invalid date';
+      const effectiveStart = hasExplicitStart ? start : ProjectStartDate;
+      const effectiveEnd = end || new Date(effectiveStart.getTime() + MS.day);
+      if (!hasExplicitStart) {
+        if (now <= effectiveEnd) {
+          return `Ends in ${formatRelative(effectiveEnd - now)}`;
+        }
+        return `Finished ${formatRelative(now - effectiveEnd)} ago`;
+      }
+      if (now < effectiveStart) {
+        return `Begins in ${formatRelative(effectiveStart - now)}`;
+      }
+      if (now <= effectiveEnd) {
+        return `Ends in ${formatRelative(effectiveEnd - now)}`;
+      }
+      return `Finished ${formatRelative(now - effectiveEnd)} ago`;
+    }
+
+    function formatWindow({ start, end, hasExplicitStart }) {
+      if (!hasExplicitStart && !end) return 'Date to be confirmed';
+      const localeOpts = { day: '2-digit', month: 'short', year: 'numeric' };
+      if (!hasExplicitStart && end) {
+        return `\u25CF Until ${end.toLocaleString('en-US', localeOpts)}`;
+      }
+      if (!end) {
+        return `\u25CF ${start.toLocaleString('en-US', localeOpts)}`;
+      }
+      const startStr = start.toLocaleString('en-US', localeOpts);
+      const endStr = end.toLocaleString('en-US', localeOpts);
+      if (startStr === endStr) return `\u25CF ${startStr}`;
+      return `\u25CF ${startStr} – ${endStr}`;
+    }
+
+    function completionRatio({ start, end, hasExplicitStart }, now) {
+      if (!hasExplicitStart && !end) return 0;
+      const effectiveStart = hasExplicitStart ? start : ProjectStartDate;
+      const effectiveEnd = end || new Date(effectiveStart.getTime() + MS.day);
+      if (now >= effectiveEnd) return 0;
+      const total = Math.max(effectiveEnd - effectiveStart, MS.minute);
+      if (now <= effectiveStart) {
+        return 1;
+      }
+      const remaining = Math.max(0, Math.min(total, effectiveEnd - now));
+      return Math.min(1, remaining / total);
+    }
+
+    function statusLabel(status) {
+      switch (status) {
+        case 'pending': return 'Pending';
+        case 'active': return 'In progress';
+        case 'done': return 'Completed';
+        default: return 'No date';
+      }
+    }
+
+    function classifyMilestone({ start, end, hasExplicitStart }, now) {
+      if (!hasExplicitStart && !end) return 'unknown';
+      const effectiveStart = hasExplicitStart ? start : ProjectStartDate;
+      const effectiveEnd = end || new Date(effectiveStart.getTime() + MS.day);
+      if (now < effectiveStart) {
+        return hasExplicitStart ? 'pending' : 'active';
+      }
+      if (now > effectiveEnd) return 'done';
+      return 'active';
+    }
+
+    function render() {
+      const now = new Date();
+      container.innerHTML = '';
+      milestones
+        .map((milestone) => normalizeMilestone(milestone))
+        .sort((a, b) => (a.end || a.start) - (b.end || b.start))
+        .forEach((item) => {
+          const node = template.content.firstElementChild.cloneNode(true);
+          const status = classifyMilestone(item, now);
+          node.classList.add(status);
+          const titleLink = node.querySelector('.milestone-title a');
+          titleLink.textContent = item.title;
+          if (item.url) {
+            titleLink.href = item.url;
+            titleLink.target = '_blank';
+          } else {
+            titleLink.href = '#';
+          }
+
+          node.querySelector('.status-label').textContent = statusLabel(status);
+          node.querySelector('.countdown').textContent = describeCountdown(item, now);
+          node.querySelector('.window').textContent = formatWindow(item);
+
+          const ratio = completionRatio(item, now);
+          const meter = node.querySelector('.radial-meter');
+          meter.style.setProperty('--p', (ratio * 100).toFixed(2));
+          meter.dataset.label = `${Math.round(ratio * 100)}%`;
+
+          const badge = node.querySelector('.category');
+          if (item.category) {
+            badge.hidden = false;
+            badge.textContent = item.category;
+          }
+
+          container.appendChild(node);
+        });
+    }
+
+    render();
+    setInterval(render, MS.minute);
+  </script>
+</body>
+</html>

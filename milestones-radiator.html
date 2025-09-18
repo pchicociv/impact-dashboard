@@ -11,7 +11,7 @@
          - start (optional ISO date or date-time: "2024-06-01" or "2024-06-01T09:00")
          - end (optional ISO date or date-time when the milestone finishes)
          - category (optional short label for grouping; colors are assigned automatically)
-       Omit "start" to default the milestone to "now".
+       Omit "start" to default the milestone to `ProjectStartDate` (set below).
 
     2. To embed this radiator inside an Azure DevOps Wiki page, open the file in a
        browser, copy the full HTML (Ctrl+A, Ctrl+C) and paste it into the Wiki editor.
@@ -238,11 +238,13 @@
 
   <script>
     const milestones = [
-      { title: "Regional teams kick-off", url: "https://example.com/kickoff", start: "2024-05-28T09:00", category: "Launch" },
-      { title: "Prototype review", url: "https://example.com/prototype", start: "2024-06-10", end: "2024-06-14", category: "Design" },
-      { title: "MVP delivery", url: "https://example.com/mvp", start: "2024-07-01", end: "2024-07-05", category: "Product" },
-      { title: "Key user training", url: "https://example.com/training", start: "2024-07-12", category: "Adoption" }
+      { title: "MVP 1", url: "https://example.com/kickoff", end: "2025-10-17", category: "MVP" },
+      { title: "MVP 2", url: "https://example.com/prototype", end: "2025-11-14", category: "MVP" },
+      { title: "Release Sprint", url: "https://example.com/mvp", start: "2025-11-17", end: "2025-11-28", category: "Release" },
+      { title: "Pillar 2 Rating CR", url: "https://example.com/training", end: "2025-12-05", category: "CR" }
     ];
+
+    const ProjectStartDate = new Date('2025-07-14T00:00:00');
 
     const MS = {
       minute: 60 * 1000,
@@ -261,23 +263,32 @@
       return isNaN(parsed.getTime()) ? null : parsed;
     }
 
-    function normalizeMilestone(milestone, fallbackStart) {
-      const start = milestone.start ? parseDate(milestone.start) : new Date(fallbackStart);
+    function normalizeMilestone(milestone) {
+      const parsedStart = milestone.start ? parseDate(milestone.start) : null;
+      const explicitStart = Boolean(parsedStart);
+      const start = parsedStart ? new Date(parsedStart) : new Date(ProjectStartDate);
       const end = milestone.end ? parseDate(milestone.end) : null;
-      return { ...milestone, start, end };
+      return { ...milestone, start, end, hasExplicitStart: explicitStart };
     }
 
-    function classifyMilestone({ start, end }, now) {
-      if (!start) return 'unknown';
-      const effectiveEnd = end || new Date(start.getTime() + MS.day);
-      if (now < start) return 'pending';
+    function classifyMilestone({ start, end, hasExplicitStart }, now) {
+      if (!hasExplicitStart && !end) return 'unknown';
+      const effectiveStart = hasExplicitStart ? start : ProjectStartDate;
+      const effectiveEnd = end || new Date(effectiveStart.getTime() + MS.day);
+      if (now < effectiveStart) {
+        return hasExplicitStart ? 'pending' : 'active';
+      }
       if (now > effectiveEnd) return 'done';
       return 'active';
     }
 
-    function formatWindow({ start, end }) {
-      if (!start) return 'Date to be confirmed';
+    function formatWindow({ start, end, hasExplicitStart }) {
+      if (!hasExplicitStart && !end) return 'Date to be confirmed';
       const localeOpts = { day: '2-digit', month: 'short', year: 'numeric' };
+      if (!hasExplicitStart && end) {
+        const endStr = end.toLocaleString('en-US', localeOpts);
+        return `\u25CF Until ${endStr}`;
+      }
       const startStr = start.toLocaleString('en-US', localeOpts);
       if (!end) {
         return `\u25CF ${startStr}`;
@@ -306,25 +317,37 @@
     }
 
     function describeCountdown(milestone, now) {
-      const { start, end } = milestone;
-      if (!start) return 'Invalid date';
-      const effectiveEnd = end || new Date(start.getTime() + MS.day);
-      if (now < start) {
-        return `Starts in ${formatRelative(start - now)}`;
+      const { start, end, hasExplicitStart } = milestone;
+      if (!hasExplicitStart && !end) return 'Invalid date';
+      const effectiveStart = hasExplicitStart ? start : ProjectStartDate;
+      const effectiveEnd = end || new Date(effectiveStart.getTime() + MS.day);
+      if (!hasExplicitStart) {
+        if (now <= effectiveEnd) {
+          return `Ends in ${formatRelative(effectiveEnd - now)}`;
+        }
+        return `Finished ${formatRelative(now - effectiveEnd)} ago`;
+      }
+      if (now < effectiveStart) {
+        return `Begins in ${formatRelative(effectiveStart - now)}`;
       }
       if (now <= effectiveEnd) {
-        return `Time remaining ${formatRelative(effectiveEnd - now)}`;
+        return `Ends in ${formatRelative(effectiveEnd - now)}`;
       }
       return `Finished ${formatRelative(now - effectiveEnd)} ago`;
     }
 
     function progressValue(milestone, now) {
-      const { start, end } = milestone;
-      if (!start) return 0;
-      if (now <= start) return 0;
-      const effectiveEnd = end || new Date(start.getTime() + MS.day);
-      if (now >= effectiveEnd) return 1;
-      return (now - start) / (effectiveEnd - start);
+      const { start, end, hasExplicitStart } = milestone;
+      if (!hasExplicitStart && !end) return 0;
+      const effectiveStart = hasExplicitStart ? start : ProjectStartDate;
+      const effectiveEnd = end || new Date(effectiveStart.getTime() + MS.day);
+      if (now >= effectiveEnd) return 0;
+      const total = Math.max(effectiveEnd - effectiveStart, MS.minute);
+      if (now <= effectiveStart) {
+        return 1;
+      }
+      const remaining = Math.max(0, Math.min(total, effectiveEnd - now));
+      return Math.min(1, remaining / total);
     }
 
     function statusLabel(status) {
@@ -377,7 +400,7 @@
       radiator.innerHTML = '';
       completedRadiator.innerHTML = '';
       const items = milestones
-        .map((milestone) => normalizeMilestone(milestone, now))
+        .map((milestone) => normalizeMilestone(milestone))
         .sort((a, b) => (a.start || 0) - (b.start || 0));
 
       const categoryColors = buildCategoryColors(items);
@@ -399,7 +422,10 @@
         node.querySelector('.countdown').textContent = describeCountdown(item, now);
         node.querySelector('.window').textContent = formatWindow(item);
         const progress = status === 'unknown' ? 0 : progressValue(item, now);
-        node.querySelector('.progress-bar span').style.setProperty('--w', `${Math.round(progress * 100)}%`);
+        const progressPercent = Math.round(progress * 100);
+        const progressBar = node.querySelector('.progress-bar');
+        progressBar.setAttribute('aria-label', `${progressPercent}% of the time window remaining`);
+        progressBar.querySelector('span').style.setProperty('--w', `${progressPercent}%`);
 
         const badge = node.querySelector('.category');
         if (item.category) {
