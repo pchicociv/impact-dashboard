@@ -68,6 +68,132 @@
       gap: 24px;
       box-shadow: var(--shadow-elev);
     }
+    details.editor-panel {
+      background: var(--panel);
+      border-radius: 18px;
+      border: 1px solid rgba(15,45,46,0.12);
+      box-shadow: var(--shadow-elev);
+      margin: 0 0 32px;
+      overflow: hidden;
+    }
+    details.editor-panel > summary {
+      cursor: pointer;
+      padding: 20px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--teal-700);
+      background: var(--panel);
+      outline: none;
+    }
+    details.editor-panel > summary:focus-visible {
+      outline: 3px solid var(--teal-300);
+      outline-offset: 4px;
+    }
+    details.editor-panel[open] > summary {
+      border-bottom: 1px solid rgba(15,45,46,0.08);
+    }
+    .editor-body {
+      padding: 24px;
+      background: var(--panel-soft);
+      display: grid;
+      gap: 20px;
+    }
+    .editor-help {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .editor-list {
+      display: grid;
+      gap: 16px;
+    }
+    .editor-milestone {
+      border: 1px solid rgba(15,45,46,0.12);
+      border-radius: 14px;
+      padding: 16px;
+      background: var(--panel);
+      display: grid;
+      gap: 12px;
+    }
+    .editor-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: flex-end;
+    }
+    .editor-field {
+      flex: 1 1 220px;
+      display: grid;
+      gap: 4px;
+    }
+    .editor-field label {
+      font-size: 11px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .editor-field input,
+    .editor-field textarea {
+      font: inherit;
+      padding: 9px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(15,45,46,0.18);
+      background: var(--panel-soft);
+      color: var(--ink);
+      min-height: 38px;
+    }
+    .editor-field input:focus,
+    .editor-field textarea:focus {
+      outline: 2px solid var(--teal-300);
+      outline-offset: 1px;
+      border-color: var(--teal-600);
+      background: var(--panel);
+    }
+    .editor-actions {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .editor-actions button,
+    .editor-remove {
+      font: inherit;
+      cursor: pointer;
+      border-radius: 999px;
+      border: none;
+      padding: 8px 16px;
+      font-weight: 600;
+      transition: background-color .2s ease, color .2s ease, box-shadow .2s ease;
+    }
+    .editor-remove {
+      background: rgba(244,81,30,0.12);
+      color: #C62828;
+      box-shadow: inset 0 0 0 1px rgba(198,40,40,0.18);
+      align-self: flex-start;
+    }
+    .editor-remove:hover,
+    .editor-remove:focus {
+      background: rgba(244,81,30,0.2);
+    }
+    .editor-add,
+    .editor-actions button {
+      background: var(--teal-600);
+      color: white;
+      box-shadow: var(--shadow-elev);
+    }
+    .editor-add:hover,
+    .editor-add:focus,
+    .editor-actions button:hover,
+    .editor-actions button:focus {
+      background: var(--teal-700);
+    }
+    .editor-empty {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      font-style: italic;
+    }
     .category-head {
       display: flex;
       flex-wrap: wrap;
@@ -207,15 +333,27 @@
     <h1>Project Milestones</h1>
     <p class="lead">Milestone visualization by category as concentric rings showing how much time has been consumed until its next key date.</p>
   </header>
+  <details class="editor-panel" id="milestone-editor">
+    <summary>Edit milestones</summary>
+    <div class="editor-body">
+      <p class="editor-help">Update the details below to adjust the visualization in real-time. Date fields support ISO dates or date-time strings.</p>
+      <form id="milestone-form">
+        <div class="editor-list" id="editor-list"></div>
+        <div class="editor-actions">
+          <button type="button" class="editor-add" id="add-milestone">Add milestone</button>
+        </div>
+      </form>
+    </div>
+  </details>
   <section class="categories-grid" id="categories"></section>
 
   <script>
-    const milestones = [
-      { 
-        title: "MVP 1", 
-        url: "https://dev.azure.com/dcslsoftwareltd/Afreximbank%20-%20Trade%20Impact%20Lounge/_queries/query/eca13ca7-33b5-4dfe-b84a-ec902ea55573/", 
-        end: "2025-10-17", 
-        category: "MVP" 
+    let milestones = [
+      {
+        title: "MVP 1",
+        url: "https://dev.azure.com/dcslsoftwareltd/Afreximbank%20-%20Trade%20Impact%20Lounge/_queries/query/eca13ca7-33b5-4dfe-b84a-ec902ea55573/",
+        end: "2025-10-17",
+        category: "MVP"
       },
       { 
         title: "MVP 2", 
@@ -248,6 +386,10 @@
     };
 
     const categoriesContainer = document.getElementById('categories');
+    const editorList = document.getElementById('editor-list');
+    const addMilestoneButton = document.getElementById('add-milestone');
+    const milestoneForm = document.getElementById('milestone-form');
+    const milestoneEditor = document.getElementById('milestone-editor');
     const SVG_NS = 'http://www.w3.org/2000/svg';
 
     function parseDate(value) {
@@ -287,6 +429,11 @@
         acc[category] = pastelPalette[index % pastelPalette.length];
         return acc;
       }, {});
+    }
+
+    function getDisplayTitle(item) {
+      const title = typeof item.title === 'string' ? item.title.trim() : '';
+      return title || 'Untitled milestone';
     }
 
     function formatRelative(ms) {
@@ -391,6 +538,136 @@
     function getEffectiveEnd(milestone) {
       const start = getEffectiveStart(milestone);
       return milestone.end ? milestone.end : new Date(start.getTime() + MS.day);
+    }
+
+    function setMilestones(next, { refreshEditor = true } = {}) {
+      milestones = next;
+      render();
+      if (refreshEditor) {
+        renderEditor();
+      }
+    }
+
+    function updateMilestone(index, field, value) {
+      const isTitleField = field === 'title';
+      const sanitized = isTitleField ? value : value.trim();
+      const next = milestones.map((item, i) => {
+        if (i !== index) return item;
+        const updated = { ...item };
+        if (isTitleField) {
+          updated.title = value;
+          return updated;
+        }
+        if (sanitized) {
+          updated[field] = sanitized;
+        } else {
+          delete updated[field];
+        }
+        return updated;
+      });
+      setMilestones(next, { refreshEditor: false });
+      if (!isTitleField && value !== sanitized) {
+        return sanitized;
+      }
+    }
+
+    function createField({ label, value, placeholder = '', type = 'text', onInput, id }) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'editor-field';
+      const labelEl = document.createElement('label');
+      labelEl.setAttribute('for', id);
+      labelEl.textContent = label;
+      const input = document.createElement('input');
+      input.type = type;
+      input.id = id;
+      input.placeholder = placeholder;
+      input.value = value || '';
+      input.addEventListener('input', (event) => {
+        const maybeSanitized = onInput(event.target.value);
+        if (typeof maybeSanitized === 'string') {
+          event.target.value = maybeSanitized;
+        }
+      });
+      wrapper.appendChild(labelEl);
+      wrapper.appendChild(input);
+      return wrapper;
+    }
+
+    function renderEditor() {
+      if (!editorList) return;
+      editorList.innerHTML = '';
+      if (!milestones.length) {
+        const empty = document.createElement('p');
+        empty.className = 'editor-empty';
+        empty.textContent = 'No milestones configured yet. Add one to get started.';
+        editorList.appendChild(empty);
+        return;
+      }
+
+      milestones.forEach((item, index) => {
+        const card = document.createElement('article');
+        card.className = 'editor-milestone';
+
+        const headerRow = document.createElement('div');
+        headerRow.className = 'editor-row';
+        headerRow.appendChild(createField({
+          label: 'Title',
+          value: item.title || '',
+          placeholder: 'Milestone name',
+          id: `milestone-${index}-title`,
+          onInput: (val) => updateMilestone(index, 'title', val)
+        }));
+        headerRow.appendChild(createField({
+          label: 'Category',
+          value: item.category || '',
+          placeholder: 'e.g. MVP',
+          id: `milestone-${index}-category`,
+          onInput: (val) => updateMilestone(index, 'category', val)
+        }));
+
+        const removeButton = document.createElement('button');
+        removeButton.type = 'button';
+        removeButton.className = 'editor-remove';
+        removeButton.textContent = 'Remove';
+        removeButton.addEventListener('click', () => {
+          const next = milestones.filter((_, i) => i !== index);
+          setMilestones(next);
+        });
+        headerRow.appendChild(removeButton);
+        card.appendChild(headerRow);
+
+        const datesRow = document.createElement('div');
+        datesRow.className = 'editor-row';
+        datesRow.appendChild(createField({
+          label: 'Start (optional)',
+          value: item.start || '',
+          placeholder: 'YYYY-MM-DD or YYYY-MM-DDTHH:mm',
+          id: `milestone-${index}-start`,
+          onInput: (val) => updateMilestone(index, 'start', val)
+        }));
+        datesRow.appendChild(createField({
+          label: 'End (optional)',
+          value: item.end || '',
+          placeholder: 'YYYY-MM-DD or YYYY-MM-DDTHH:mm',
+          id: `milestone-${index}-end`,
+          onInput: (val) => updateMilestone(index, 'end', val)
+        }));
+        card.appendChild(datesRow);
+
+        const urlRow = document.createElement('div');
+        urlRow.className = 'editor-row';
+        urlRow.appendChild(createField({
+          label: 'Link (optional)',
+          value: item.url || '',
+          placeholder: 'https://example.com',
+          id: `milestone-${index}-url`,
+          type: 'url',
+          onInput: (val) => updateMilestone(index, 'url', val)
+        }));
+        card.appendChild(urlRow);
+
+        editorList.appendChild(card);
+      });
     }
 
     function buildRingsChart(items, now) {
@@ -549,7 +826,7 @@
 
           const overallTitle = document.createElement('span');
           overallTitle.className = 'legend-title';
-          const milestoneNames = groupItems.map(item => item.title).join(', ');
+          const milestoneNames = groupItems.map(getDisplayTitle).join(', ');
           overallTitle.textContent = `Overall (${milestoneNames})`;
           overallText.appendChild(overallTitle);
 
@@ -596,15 +873,16 @@
 
           const titleLine = document.createElement('span');
           titleLine.className = 'legend-title';
+          const displayTitle = getDisplayTitle(item);
           if (item.url) {
             const link = document.createElement('a');
             link.href = item.url;
-            link.textContent = item.title;
+            link.textContent = displayTitle;
             link.target = '_blank';
             link.rel = 'noopener';
             titleLine.appendChild(link);
           } else {
-            titleLine.textContent = item.title;
+            titleLine.textContent = displayTitle;
           }
           legendText.appendChild(titleLine);
 
@@ -645,7 +923,30 @@
       });
     }
 
+    if (milestoneForm) {
+      milestoneForm.addEventListener('submit', (event) => event.preventDefault());
+    }
+
+    if (addMilestoneButton) {
+      addMilestoneButton.addEventListener('click', () => {
+        const nextIndex = milestones.length + 1;
+        const next = [...milestones, { title: `New milestone ${nextIndex}` }];
+        setMilestones(next);
+        if (milestoneEditor) {
+          milestoneEditor.open = true;
+        }
+        setTimeout(() => {
+          const targetInput = document.getElementById(`milestone-${next.length - 1}-title`);
+          if (targetInput) {
+            targetInput.focus();
+            targetInput.select();
+          }
+        }, 0);
+      });
+    }
+
     render();
+    renderEditor();
     setInterval(render, MS.minute);
   </script>
 </body>
