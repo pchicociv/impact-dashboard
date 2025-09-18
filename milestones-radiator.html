@@ -341,13 +341,13 @@
       if (!hasExplicitStart && !end) return 0;
       const effectiveStart = hasExplicitStart ? start : ProjectStartDate;
       const effectiveEnd = end || new Date(effectiveStart.getTime() + MS.day);
-      if (now >= effectiveEnd) return 1;
+      if (now >= effectiveEnd) return 0;
       const total = Math.max(effectiveEnd - effectiveStart, MS.minute);
       if (now <= effectiveStart) {
-        return 0;
+        return 1;
       }
-      const elapsed = Math.max(0, Math.min(total, now - effectiveStart));
-      return Math.min(1, elapsed / total);
+      const remaining = Math.max(0, Math.min(total, effectiveEnd - now));
+      return Math.min(1, remaining / total);
     }
 
     function statusLabel(status) {
@@ -424,7 +424,7 @@
         const progress = status === 'unknown' ? 0 : progressValue(item, now);
         const progressPercent = Math.round(progress * 100);
         const progressBar = node.querySelector('.progress-bar');
-        progressBar.setAttribute('aria-label', `${progressPercent}% of the time window consumed`);
+        progressBar.setAttribute('aria-label', `${progressPercent}% of the time window remaining`);
         progressBar.querySelector('span').style.setProperty('--w', `${progressPercent}%`);
 
         const badge = node.querySelector('.category');
