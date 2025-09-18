@@ -130,22 +130,6 @@
       font-weight: 600;
       color: var(--ink);
     }
-    .overall-legend {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 4px;
-    }
-    .overall-legend::before {
-      content: '';
-      width: 14px;
-      height: 14px;
-      border-radius: 4px;
-      box-shadow: inset 0 0 0 1px rgba(15,45,46,.18);
-      background: var(--aggregate-color, var(--accent));
-    }
     .milestone-list {
       list-style: none;
       margin: 0;
@@ -258,12 +242,12 @@
     }
 
     const ringPalette = [
-      '#0F7A6C',
-      '#F49D37',
-      '#F45B69',
-      '#33658A',
-      '#7A77FF',
-      '#55DDE0'
+      '#1E88E5',
+      '#FB8C00',
+      '#8E24AA',
+      '#43A047',
+      '#F4511E',
+      '#00ACC1'
     ];
 
     const pastelPalette = [
@@ -403,12 +387,19 @@
         end: getEffectiveEnd(item)
       }));
 
-      const aggregateStart = new Date(Math.min(...ranges.map(range => range.start.getTime())));
-      const aggregateEnd = new Date(Math.max(...ranges.map(range => range.end.getTime())));
-      const aggregateRatio = completionForRange(aggregateStart, aggregateEnd, now);
+      const showAggregate = items.length > 1;
+      const aggregateStart = showAggregate
+        ? new Date(Math.min(...ranges.map(range => range.start.getTime())))
+        : null;
+      const aggregateEnd = showAggregate
+        ? new Date(Math.max(...ranges.map(range => range.end.getTime())))
+        : null;
+      const aggregateRatio = showAggregate && aggregateStart && aggregateEnd
+        ? completionForRange(aggregateStart, aggregateEnd, now)
+        : null;
 
       const ringColors = items.map((_, index) => ringPalette[index % ringPalette.length]);
-      const aggregateColor = '#2C9B88';
+      const aggregateColor = '#F9C80E';
 
       function createCircle({ radius, stroke, ratio = null, opacity = 1 }) {
         const circle = document.createElementNS(SVG_NS, 'circle');
@@ -436,17 +427,21 @@
         svg.appendChild(createCircle({ radius, stroke: ringColors[index], ratio }));
       });
 
-      const aggregateRadius = radiusBase + items.length * ringSpacing;
-      svg.appendChild(createCircle({ radius: aggregateRadius, stroke: 'rgba(207, 224, 220, 0.6)', opacity: 1 }));
-      svg.appendChild(createCircle({ radius: aggregateRadius, stroke: aggregateColor, ratio: aggregateRatio }));
+      if (showAggregate) {
+        const aggregateRadius = radiusBase + items.length * ringSpacing;
+        svg.appendChild(createCircle({ radius: aggregateRadius, stroke: 'rgba(207, 224, 220, 0.6)', opacity: 1 }));
+        svg.appendChild(createCircle({ radius: aggregateRadius, stroke: aggregateColor, ratio: aggregateRatio }));
+      }
 
       return {
         svg,
-        aggregateRatio,
-        aggregateStart,
-        aggregateEnd,
-        ringColors,
-        aggregateColor
+        aggregate: showAggregate ? {
+          ratio: aggregateRatio,
+          start: aggregateStart,
+          end: aggregateEnd,
+          color: aggregateColor
+        } : null,
+        ringColors
       };
     }
 
@@ -497,75 +492,74 @@
 
         const ringsPanel = document.createElement('div');
         ringsPanel.className = 'rings-panel';
-        const { svg, aggregateRatio, aggregateStart, aggregateEnd, ringColors, aggregateColor } = buildRingsChart(groupItems, now);
+        const { svg, aggregate, ringColors } = buildRingsChart(groupItems, now);
         const chartShell = document.createElement('div');
         chartShell.className = 'chart-shell';
         chartShell.appendChild(svg);
         ringsPanel.appendChild(chartShell);
 
-        const overallWindow = document.createElement('div');
-        overallWindow.className = 'overall-window';
-        overallWindow.textContent = formatOverallWindow(aggregateStart, aggregateEnd);
-        ringsPanel.appendChild(overallWindow);
-        const overallCountdown = document.createElement('div');
-        overallCountdown.className = 'overall-countdown';
-        overallCountdown.textContent = describeRange(aggregateStart, aggregateEnd, now);
-        ringsPanel.appendChild(overallCountdown);
-        const overallLegend = document.createElement('div');
-        overallLegend.className = 'overall-legend';
-        overallLegend.textContent = 'Overall ring & slider cover all milestones below';
-        overallLegend.style.setProperty('--aggregate-color', aggregateColor);
-        ringsPanel.appendChild(overallLegend);
+        if (aggregate) {
+          const overallWindow = document.createElement('div');
+          overallWindow.className = 'overall-window';
+          overallWindow.textContent = formatOverallWindow(aggregate.start, aggregate.end);
+          ringsPanel.appendChild(overallWindow);
+          const overallCountdown = document.createElement('div');
+          overallCountdown.className = 'overall-countdown';
+          overallCountdown.textContent = describeRange(aggregate.start, aggregate.end, now);
+          ringsPanel.appendChild(overallCountdown);
+        }
 
         body.appendChild(ringsPanel);
 
         const list = document.createElement('ul');
         list.className = 'milestone-list';
-        const overallItem = document.createElement('li');
-        overallItem.className = 'milestone-item overall-item';
+        if (aggregate) {
+          const overallItem = document.createElement('li');
+          overallItem.className = 'milestone-item overall-item';
 
-        const overallSwatch = document.createElement('span');
-        overallSwatch.className = 'swatch';
-        overallSwatch.style.setProperty('--swatch', aggregateColor);
-        overallItem.appendChild(overallSwatch);
+          const overallSwatch = document.createElement('span');
+          overallSwatch.className = 'swatch';
+          overallSwatch.style.setProperty('--swatch', aggregate.color);
+          overallItem.appendChild(overallSwatch);
 
-        const overallText = document.createElement('div');
-        overallText.className = 'legend-text';
+          const overallText = document.createElement('div');
+          overallText.className = 'legend-text';
 
-        const overallTitle = document.createElement('span');
-        overallTitle.className = 'legend-title';
-        const milestoneNames = groupItems.map(item => item.title).join(', ');
-        overallTitle.textContent = `Overall (${milestoneNames})`;
-        overallText.appendChild(overallTitle);
+          const overallTitle = document.createElement('span');
+          overallTitle.className = 'legend-title';
+          const milestoneNames = groupItems.map(item => item.title).join(', ');
+          overallTitle.textContent = `Overall (${milestoneNames})`;
+          overallText.appendChild(overallTitle);
 
-        const overallWindowLine = document.createElement('span');
-        overallWindowLine.className = 'legend-window';
-        overallWindowLine.textContent = formatOverallWindow(aggregateStart, aggregateEnd);
-        overallText.appendChild(overallWindowLine);
+          const overallWindowLine = document.createElement('span');
+          overallWindowLine.className = 'legend-window';
+          overallWindowLine.textContent = formatOverallWindow(aggregate.start, aggregate.end);
+          overallText.appendChild(overallWindowLine);
 
-        const overallCountdownLine = document.createElement('span');
-        overallCountdownLine.className = 'legend-countdown';
-        overallCountdownLine.textContent = describeRange(aggregateStart, aggregateEnd, now);
-        overallText.appendChild(overallCountdownLine);
+          const overallCountdownLine = document.createElement('span');
+          overallCountdownLine.className = 'legend-countdown';
+          overallCountdownLine.textContent = describeRange(aggregate.start, aggregate.end, now);
+          overallText.appendChild(overallCountdownLine);
 
-        overallItem.appendChild(overallText);
+          overallItem.appendChild(overallText);
 
-        const overallPercentLabel = document.createElement('span');
-        overallPercentLabel.className = 'legend-percent';
-        overallPercentLabel.style.setProperty('color', aggregateColor);
-        overallPercentLabel.textContent = `${Math.round(aggregateRatio * 100)}%`;
-        overallItem.appendChild(overallPercentLabel);
+          const overallPercentLabel = document.createElement('span');
+          overallPercentLabel.className = 'legend-percent';
+          overallPercentLabel.style.setProperty('color', aggregate.color);
+          overallPercentLabel.textContent = `${Math.round(aggregate.ratio * 100)}%`;
+          overallItem.appendChild(overallPercentLabel);
 
-        const overallProgress = document.createElement('div');
-        overallProgress.className = 'progress-bar';
-        overallProgress.setAttribute('aria-label', `${Math.round(aggregateRatio * 100)}% of the category window consumed`);
-        const overallProgressFill = document.createElement('span');
-        overallProgressFill.style.setProperty('--w', `${(aggregateRatio * 100).toFixed(1)}%`);
-        overallProgressFill.style.setProperty('--slider-color', aggregateColor);
-        overallProgress.appendChild(overallProgressFill);
-        overallItem.appendChild(overallProgress);
+          const overallProgress = document.createElement('div');
+          overallProgress.className = 'progress-bar';
+          overallProgress.setAttribute('aria-label', `${Math.round(aggregate.ratio * 100)}% of the category window consumed`);
+          const overallProgressFill = document.createElement('span');
+          overallProgressFill.style.setProperty('--w', `${(aggregate.ratio * 100).toFixed(1)}%`);
+          overallProgressFill.style.setProperty('--slider-color', aggregate.color);
+          overallProgress.appendChild(overallProgressFill);
+          overallItem.appendChild(overallProgress);
 
-        list.appendChild(overallItem);
+          list.appendChild(overallItem);
+        }
         groupItems.forEach((item, index) => {
           const li = document.createElement('li');
           li.className = 'milestone-item';
