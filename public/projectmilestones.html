@@ -16,7 +16,7 @@
   -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Milestones Concentric Rings</title>
+  <title>Project Milestones</title>
   <style>
     :root {
       --teal-100:#EAF6F4;
@@ -204,17 +204,39 @@
 </head>
 <body>
   <header>
-    <h1>Milestones Concentric Rings</h1>
-    <p class="lead">Visualiza cada categoría como anillos concéntricos que muestran cuánto tiempo se ha consumido hasta su próxima fecha clave.</p>
+    <h1>Project Milestones</h1>
+    <p class="lead">Milestone visualization by category as concentric rings showing how much time has been consumed until its next key date.</p>
   </header>
   <section class="categories-grid" id="categories"></section>
 
   <script>
     const milestones = [
-      { title: "MVP 1", url: "https://example.com/kickoff", end: "2025-10-17", category: "MVP" },
-      { title: "MVP 2", url: "https://example.com/prototype", end: "2025-11-14", category: "MVP" },
-      { title: "Release Sprint", url: "https://example.com/mvp", start: "2025-11-17", end: "2025-11-28", category: "Release" },
-      { title: "Pillar 2 Rating CR", url: "https://example.com/training", end: "2025-12-05", category: "CR" }
+      { 
+        title: "MVP 1", 
+        url: "https://dev.azure.com/dcslsoftwareltd/Afreximbank%20-%20Trade%20Impact%20Lounge/_queries/query/eca13ca7-33b5-4dfe-b84a-ec902ea55573/", 
+        end: "2025-10-17", 
+        category: "MVP" 
+      },
+      { 
+        title: "MVP 2", 
+        url: "https://dev.azure.com/dcslsoftwareltd/Afreximbank%20-%20Trade%20Impact%20Lounge/_queries/query/2f7e4854-37d9-4f72-81ac-5d68fdab03d2/", 
+        end: "2025-11-14", 
+        category: "MVP" 
+      },
+      { 
+        title: "Release Sprint", 
+        url: "https://dev.azure.com/dcslsoftwareltd/Afreximbank%20-%20Trade%20Impact%20Lounge/_backlogs/backlog/Afreximbank%20-%20Trade%20Impact%20Lounge%20Team/Epics", 
+        start: "2025-11-17", 
+        end: "2025-11-28", 
+        category: "Release" 
+      },
+      { 
+        title: "Pillar 2 Rating CR", 
+        url: "https://dev.azure.com/dcslsoftwareltd/Afreximbank%20-%20Trade%20Impact%20Lounge/_backlogs/backlog/Afreximbank%20-%20Trade%20Impact%20Lounge%20Team/Epics?workitem=231252", 
+        start: "2025-11-28",
+        end: "2025-12-05", 
+        category: "CR" 
+      }
     ];
 
     const ProjectStartDate = new Date('2025-07-14T00:00:00');
